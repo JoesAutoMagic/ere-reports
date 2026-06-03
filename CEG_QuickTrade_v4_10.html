@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CEG — Constellation Energy Corp · Quick Trade · Equity Research Engine v4.10</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Merriweather:ital,wght@0,700;0,900;1,400&display=swap');
+
+  :root {
+    --teal: #0F172A;
+    --teal-light: #F8FAFC;
+    --teal-mid: #475569;
+    --teal-dark: #020617;
+    --bull: #059669;
+    --bull-light: #ECFDF5;
+    --bull-mid: #10B981;
+    --bear: #BE123C;
+    --bear-light: #FFF1F2;
+    --bear-mid: #E11D48;
+    --amber: #B45309;
+    --amber-light: #FFFBEB;
+    --text: #1E293B;
+    --text-muted: #64748B;
+    --text-light: #94A3B8;
+    --bg: #F1F5F9;
+    --bg-card: #FFFFFF;
+    --border: rgba(15, 23, 42, 0.08);
+    --border-light: rgba(15, 23, 42, 0.04);
+    --gold: #D97706;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  .page { max-width: 760px; margin: 3rem auto; background: var(--bg-card); box-shadow: 0 10px 40px rgba(0,0,0,.04), 0 1px 3px rgba(0,0,0,.02); min-height: 100vh; border-radius: 8px; overflow: hidden; }
+
+  /* MASTHEAD */
+  .masthead { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 2.5rem 3rem; display: flex; justify-content: space-between; align-items: center; gap: 2rem; }
+  .engine-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: .15em; text-transform: uppercase; color: var(--teal-mid); margin-bottom: 10px; }
+  .ticker-name { font-family: 'Merriweather', serif; font-size: 32px; font-weight: 900; line-height: 1.1; color: var(--teal-dark); letter-spacing: -0.02em; }
+  .company-name { font-size: 13px; color: var(--text-muted); margin-top: 6px; font-weight: 400; }
+  .biz-snap { background: var(--teal-light); border: 1px solid var(--border); border-left: 3px solid var(--teal); border-radius: 0 6px 6px 0; padding: 1rem 1.25rem; min-width: 220px; }
+  .biz-snap-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: .15em; text-transform: uppercase; color: var(--teal); margin-bottom: 12px; }
+  .biz-row { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; border-bottom: 1px solid var(--border-light); }
+  .biz-row:last-child { border-bottom: none; }
+  .biz-key { font-size: 11px; color: var(--text-muted); }
+  .biz-val { font-size: 11px; color: var(--text); font-weight: 500; }
+
+  /* COCKPIT */
+  .section { padding: 2rem 3rem; border-bottom: 1px solid var(--border-light); }
+  .section-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: .15em; text-transform: uppercase; color: var(--teal); margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .tldr-block { font-size: 15px; line-height: 1.7; padding: 18px 24px; background: var(--teal-light); border-left: 3px solid var(--teal); border-radius: 0 6px 6px 0; }
+  .tldr-block strong { color: var(--teal-dark); font-weight: 600; }
+
+  /* THE NUMBERS */
+  .numbers-section { padding: 2rem 3rem; border-bottom: 1px solid var(--border-light); }
+  .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-top: 3px solid var(--teal); border-radius: 0 0 6px 6px; padding: 1.25rem 1.25rem; }
+  .stat-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  .stat-value { font-size: 22px; font-weight: 700; color: var(--teal-dark); line-height: 1.1; font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+  .stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 6px; line-height: 1.4; }
+  .stat-value.up { color: var(--bull); }
+  .stat-value.down { color: var(--bear); }
+  .stat-value.warn { color: var(--amber); }
+
+  /* C19 NEWS PATTERN */
+  .c19-wrap { border-bottom: 1px solid var(--border-light); }
+  .c19-head { padding: 1.5rem 3rem 0.5rem; }
+  .c19-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: .15em; text-transform: uppercase; color: var(--teal); }
+  .timeline { overflow-x: auto; padding: 1.5rem 3rem; background: white; }
+  .timeline-inner { display: flex; gap: 12px; min-width: max-content; align-items: stretch; }
+  .ev { border-radius: 6px; padding: 14px 16px; min-width: 170px; max-width: 190px; border: 1px solid; }
+  .ev.pos { background: var(--bull-light); border-color: #A7F3D0; }
+  .ev.neg { background: var(--bear-light); border-color: #FECDD3; }
+  .ev.flat { background: var(--teal-light); border-color: var(--border); }
+  .ev-date { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+  .ev.pos .ev-date { color: var(--bull-mid); }
+  .ev.neg .ev-date { color: var(--bear-mid); }
+  .ev.flat .ev-date { color: var(--text-muted); }
+  .ev-name { font-size: 12px; font-weight: 500; margin-bottom: 6px; line-height: 1.4; color: var(--text); }
+  .ev-type { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
+  .ev-rx { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .ev.pos .ev-rx { color: var(--bull); }
+  .ev.neg .ev-rx { color: var(--bear); }
+  .ev.flat .ev-rx { color: var(--text-muted); }
+  .ev-read { font-size: 11px; color: var(--text-muted); margin-top: 6px; line-height: 1.5; }
+  .c19-framing { padding: 1.25rem 3rem; background: var(--teal-light); border-top: 1px solid var(--border-light); }
+  .c19-framing-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: .15em; text-transform: uppercase; color: var(--teal); margin-right: 12px; }
+  .c19-framing-text { font-size: 12px; color: var(--text-muted); font-style: italic; }
+
+  /* ARENA */
+  .arena-wrap { background: var(--teal-light); border-top: 3px solid var(--teal-dark); }
+  .arena-head { background: var(--teal-dark); color: white; padding: 2rem 3rem; }
+  .arena-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: .15em; text-transform: uppercase; color: rgba(255,255,255,.5); margin-bottom: 8px; }
+  .arena-title { font-family: 'Merriweather', serif; font-size: 24px; font-weight: 900; color: white; letter-spacing: -0.01em; }
+  .arena-sub { font-size: 14px; color: rgba(255,255,255,.7); font-weight: 400; margin-top: 6px; }
+  .arena-sub strong { color: white; font-weight: 500; }
+  .arena-disc { font-size: 11px; color: rgba(255,255,255,.4); margin-top: 10px; }
+  .arena-tabs { display: flex; background: white; border-bottom: 1px solid var(--border); padding: 0 3rem; flex-wrap: wrap; }
+  .a-tab { padding: 14px 0; margin-right: 24px; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; transition: all .2s; }
+  .a-tab:hover { color: var(--teal); }
+  .a-tab.active { color: var(--teal-dark); border-bottom-color: var(--teal-dark); }
+  .a-panel { display: none; }
+  .a-panel.active { display: block; }
+
+  /* NARRATIVES */
+  .narr-grid { display: grid; grid-template-columns: 1fr 1fr; background: white; }
+  .narr-side { padding: 2rem 2.5rem; }
+  .narr-side.bull-side { border-right: 1px solid var(--border-light); }
+  .narr-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid; }
+  .bull-side .narr-header { border-color: var(--bull); }
+  .bear-side .narr-header { border-color: var(--bear); }
+  .narr-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; flex-shrink: 0; }
+  .bull-side .narr-icon { background: var(--bull-light); color: var(--bull); }
+  .bear-side .narr-icon { background: var(--bear-light); color: var(--bear); }
+  .narr-title { font-family: 'Merriweather', serif; font-size: 16px; font-weight: 700; }
+  .bull-side .narr-title { color: var(--bull); }
+  .bear-side .narr-title { color: var(--bear); }
+  .thesis { font-size: 13px; font-style: italic; line-height: 1.6; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; border-left: 3px solid; }
+  .bull-side .thesis { background: var(--bull-light); color: #065F46; border-color: var(--bull-mid); }
+  .bear-side .thesis { background: var(--bear-light); color: #9F1239; border-color: var(--bear-mid); }
+  .arg-list { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+  .arg-item { display: flex; gap: 12px; align-items: flex-start; }
+  .arg-n { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600; flex-shrink: 0; margin-top: 2px; }
+  .bull-side .arg-n { background: var(--bull-light); color: var(--bull); }
+  .bear-side .arg-n { background: var(--bear-light); color: var(--bear); }
+  .arg-headline { font-size: 13px; font-weight: 600; line-height: 1.4; margin-bottom: 4px; color: var(--text); }
+  .arg-mech { font-size: 12px; color: var(--text-muted); line-height: 1.55; }
+  .narr-verdict { padding: 1.5rem 3rem; background: white; border-top: 1px solid var(--border-light); }
+  .narr-verdict p { font-size: 13px; color: var(--text-muted); font-style: italic; border-left: 2px solid var(--gold); padding-left: 14px; line-height: 1.7; }
+
+  /* CATALYST CLOCK */
+  .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 2rem 3rem; background: white; }
+  .cat-card { border-radius: 8px; padding: 16px; border: 1px solid; }
+  .cat-card.bull-card { background: var(--bull-light); border-color: #A7F3D0; }
+  .cat-card.bear-card { background: var(--bear-light); border-color: #FECDD3; }
+  .cat-when { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px; }
+  .bull-card .cat-when { color: var(--bull-mid); }
+  .bear-card .cat-when { color: var(--bear-mid); }
+  .cat-event { font-size: 13px; font-weight: 600; line-height: 1.4; margin-bottom: 6px; color: var(--text); }
+  .cat-read { font-size: 12px; color: var(--text-muted); line-height: 1.55; }
+
+  /* SCENARIOS */
+  .scen-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); margin: 2rem 3rem; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+  .scen-cell { padding: 1.5rem; background: white; }
+  .scen-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 8px; }
+  .scen-cell.bull-cell .scen-label { color: var(--bull); }
+  .scen-cell.bear-cell .scen-label { color: var(--bear); }
+  .scen-headline { font-size: 13px; font-weight: 600; line-height: 1.4; margin-bottom: 8px; color: var(--text); }
+  .scen-body { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+
+  /* TRADE ANATOMY */
+  .anatomy-wrap { padding: 2rem 3rem; background: white; }
+  .anat-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border-light); gap: 24px; }
+  .anat-label { font-size: 12px; color: var(--text-muted); min-width: 180px; flex-shrink: 0; font-weight: 500; }
+  .anat-val { font-size: 13px; color: var(--text); text-align: right; line-height: 1.5; }
+  .anat-val.up { color: var(--bull); font-weight: 500; }
+  .anat-val.down { color: var(--bear); font-weight: 500; }
+  .run-btn { display: block; width: 100%; margin-top: 1.5rem; padding: 14px 20px; background: var(--teal-dark); color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+  .run-btn:hover { background: var(--teal-mid); }
+
+  /* THE COMPETITION MATRIX */
+  .body-section { padding: 2rem 3rem; border-bottom: 1px solid var(--border-light); }
+  .comp-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .comp-table th { background: var(--teal-light); color: var(--text-muted); font-weight: 600; text-align: left; padding: 10px 12px; font-size: 10px; letter-spacing: .05em; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+  .comp-table td { padding: 12px; border-bottom: 1px solid var(--border-light); color: var(--text); vertical-align: top; }
+  .comp-table tr.subject td { background: #EDF2F7; font-weight: 600; color: var(--teal-dark); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .comp-table tr:not(.subject):nth-child(even) td { background: var(--teal-light); }
+  .comp-table tr:not(.subject):nth-child(odd) td { background: #FFFFFF; }
+  .comp-sym { font-family: 'JetBrains Mono', monospace; font-weight: 500; color: var(--teal-dark); }
+  .threat-high { color: var(--bear); font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+  .threat-med { color: var(--amber); font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+  .threat-low { color: var(--text-light); font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+  .comp-read { font-size: 12px; color: var(--text-muted); font-style: italic; margin-top: 16px; line-height: 1.6; padding: 12px 16px; background: var(--teal-light); border-radius: 6px; }
+
+  /* SIGNAL */
+  .signal-box { background: var(--amber-light); border: 1px solid rgba(180, 83, 9, 0.2); border-left: 4px solid var(--amber); border-radius: 0 6px 6px 0; padding: 20px 24px; }
+  .signal-head { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: var(--amber); margin-bottom: 10px; letter-spacing: 0.05em; }
+  .signal-box p { font-size: 14px; color: var(--text); line-height: 1.7; }
+
+  /* CITATIONS */
+  .cites { font-size: 11px; color: var(--text-muted); line-height: 1.6; }
+  .cites div { padding: 4px 0; border-bottom: 1px dashed var(--border-light); }
+  .cites div:last-child { border-bottom: none; }
+
+  /* FOOTER */
+  .footer { background: var(--teal-dark); color: rgba(255,255,255,.5); padding: 1.5rem 3rem; font-size: 11px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  .footer strong { color: white; }
+
+  @media(max-width:600px){
+    .masthead, .section, .numbers-section, .c19-head, .timeline, .c19-framing, .arena-head, .arena-tabs, .narr-side, .narr-verdict, .cat-grid, .anatomy-wrap, .body-section, .footer { padding-left: 1.5rem; padding-right: 1.5rem; }
+    .masthead { flex-direction: column; align-items: flex-start; }
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+    .narr-grid, .cat-grid, .scen-grid { grid-template-columns: 1fr; }
+    .narr-side.bull-side { border-right: none; border-bottom: 1px solid var(--border-light); }
+    .scen-grid { margin: 1.5rem; }
+    .anat-row { flex-direction: column; gap: 4px; }
+    .anat-val { text-align: left; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- MASTHEAD -->
+  <div class="masthead">
+    <div style="flex:1;">
+      <div class="engine-label">Equity Research Engine v4.10 · Quick Trade</div>
+      <div class="ticker-name">CEG — Constellation Energy</div>
+      <div class="company-name">Constellation Energy Corporation · Nuclear / Independent Power Producer · Nasdaq: CEG</div>
+    </div>
+    <div class="biz-snap">
+      <div class="biz-snap-label">Company snapshot</div>
+      <div class="biz-row"><span class="biz-key">Category</span><span class="biz-val">Nuclear-led IPP · AI power</span></div>
+      <div class="biz-row"><span class="biz-key">Growth stage</span><span class="biz-val">Profitable · post-Calpine scale-up</span></div>
+    </div>
+  </div>
+
+  <!-- COCKPIT -->
+  <div class="section">
+    <div class="section-label">Cockpit</div>
+    <div class="tldr-block">
+      <strong>CEG — WATCH.</strong> The biggest nuclear fleet in America, the Microsoft and Meta 20-year offtake deals everyone wants, and a Q1 that beat on both lines [1][5] — and the stock is down about a third from its $412 high [6]. The market fell in love with the AI-power story in 2024, paid semiconductor multiples for a utility, and is now charging late fees: every beat in 2026 has been sold [6][7]. The asymmetry is real — irreplaceable assets and 20-year contracted cash flows at a de-rated price — but you are catching a falling knife in a momentum unwind, not buying a bottom. The thesis resolves on one question: does the next wave of data-center contracts land before the Calpine debt and the guidance overhang finish resetting the multiple?
+    </div>
+  </div>
+
+  <!-- THE NUMBERS -->
+  <div class="numbers-section">
+    <div class="section-label">The numbers</div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-label">Price</div><div class="stat-value">$274.11</div><div class="stat-sub">June 3, 2026 [4]</div></div>
+      <div class="stat-card"><div class="stat-label">Mkt Cap</div><div class="stat-value">$98.5B</div><div class="stat-sub">Large-cap [4]</div></div>
+      <div class="stat-card"><div class="stat-label">52wk Range</div><div class="stat-value" style="font-size:15px;">$243.30–$412.70</div><div class="stat-sub">near low end [4]</div></div>
+      <div class="stat-card"><div class="stat-label">Rev YoY Growth</div><div class="stat-value up">+64%</div><div class="stat-sub">Q1 '26 vs Q1 '25 · $11.1B vs $6.8B · Calpine-driven [1][5]</div></div>
+      <div class="stat-card"><div class="stat-label">Rev QoQ Growth</div><div class="stat-value">NO DATA</div><div class="stat-sub">Calpine close (Jan '26) distorts sequential comp</div></div>
+      <div class="stat-card"><div class="stat-label">Cash / Runway</div><div class="stat-value warn">IG · levered</div><div class="stat-sub">FCF-positive · ~$12.7B Calpine debt assumed · not a runway story [2][5]</div></div>
+    </div>
+  </div>
+
+  <!-- C19 NEWS PATTERN -->
+  <div class="c19-wrap">
+    <div class="c19-head">
+      <div class="c19-eyebrow">C19 · The News Pattern · BLEED (post-peak de-rate) · Confidence: MEDIUM</div>
+    </div>
+    <div class="timeline">
+      <div class="timeline-inner">
+        <div class="ev pos"><div class="ev-date">Jun 3 2025</div><div class="ev-name">Meta signs 20-yr Clinton nuclear PPA (1,121 MW)</div><div class="ev-type">PIVOT / PRODUCT</div><div class="ev-rx">Positive</div><div class="ev-read">Second hyperscaler offtake. Cemented the AI-power narrative.</div></div>
+        <div class="ev pos"><div class="ev-date">Oct 2025</div><div class="ev-name">Stock peaks ~$412 on AI-power euphoria</div><div class="ev-type">MARKET</div><div class="ev-rx">All-time high</div><div class="ev-read">Believe mode. Utility priced like a semiconductor stock.</div></div>
+        <div class="ev flat"><div class="ev-date">Jan 7 2026</div><div class="ev-name">Calpine acquisition closes ($16.4B equity, ~$26.6B net)</div><div class="ev-type">CAPITAL</div><div class="ev-rx">Mixed</div><div class="ev-read">Accretive scale, but adds ~$12.7B debt. Story gets heavier.</div></div>
+        <div class="ev neg"><div class="ev-date">Mar 11 2026</div><div class="ev-name">Stock plunges; Argus cuts fair value $425→$350</div><div class="ev-type">RATING</div><div class="ev-rx">Down</div><div class="ev-read">Analyst re-rates to utility multiples, not chip multiples.</div></div>
+        <div class="ev neg"><div class="ev-date">Mar 2026</div><div class="ev-name">$5B divestiture announced post-Calpine</div><div class="ev-type">CAPITAL</div><div class="ev-rx">Down</div><div class="ev-read">Portfolio cleanup read as debt-management, not strength.</div></div>
+        <div class="ev neg"><div class="ev-date">May 13 2026</div><div class="ev-name">Q1 beat (EPS $2.74, rev $11.1B) — stock falls ~6%</div><div class="ev-type">EARNINGS</div><div class="ev-rx">−6%</div><div class="ev-read">Good news sold. Guidance midpoint light; debt/cost concerns.</div></div>
+        <div class="ev neg"><div class="ev-date">May–Jun 2026</div><div class="ev-name">Further slumps; data-center contract cadence stalls</div><div class="ev-type">MARKET</div><div class="ev-rx">Down</div><div class="ev-read">No new hyperscaler deal to reset the bid. Drift continues.</div></div>
+      </div>
+    </div>
+    <div class="c19-framing">
+      <span class="c19-framing-label">Arena framing</span>
+      <span class="c19-framing-text">CEG is in a BLEED — but a valuation bleed, not a fundamental one. Positive operating news (Q1 beat, Meta/Microsoft deals) no longer moves the stock up; the market is unwinding a 2024–25 momentum premium. The bull must explain why the next data-center contract breaks the de-rate, not just that the assets are great. The bear must argue the multiple still has further to fall toward boring utility math, even with the best nuclear fleet in the country.</span>
+    </div>
+  </div>
+
+  <!-- C18 THE ARENA -->
+  <div class="arena-wrap">
+    <div class="arena-head">
+      <div class="arena-eyebrow">C18 · Equity Research Engine v4.10 · Quick Trade</div>
+      <div class="arena-title">The Arena</div>
+      <div class="arena-sub"><strong>Bull vs. Bear · Forward conviction narrative · Derived from verified report findings</strong></div>
+      <div class="arena-disc">No new citations · Not a buy/sell recommendation</div>
+    </div>
+    <div class="arena-tabs">
+      <button class="a-tab active" onclick="aTab('narr',this)">Narratives</button>
+      <button class="a-tab" onclick="aTab('cats',this)">Catalyst clock</button>
+      <button class="a-tab" onclick="aTab('scen',this)">Scenarios</button>
+      <button class="a-tab" onclick="aTab('anat',this)">Trade anatomy</button>
+    </div>
+
+    <div id="ap-narr" class="a-panel active">
+      <div class="narr-grid">
+        <div class="narr-side bull-side">
+          <div class="narr-header"><div class="narr-icon">↑</div><div class="narr-title">The Bull's Story</div></div>
+          <div class="thesis">"The market priced CEG like a chip stock, panicked, and is now re-pricing it like a boring utility. It is neither. It owns the only assets that can power AI at scale — and it just got 30% bigger and 20% more profitable while the stock fell."</div>
+          <ul class="arg-list">
+            <li class="arg-item"><div class="arg-n">1</div><div><div class="arg-headline">Largest U.S. nuclear fleet — physically irreplaceable</div><div class="arg-mech">You cannot build a new nuclear plant in a contract cycle. CEG already owns the carbon-free baseload hyperscalers are scrambling for. Scarcity is the moat. Every new AI data center is a buyer with no real alternative supplier at this scale.</div></div></li>
+            <li class="arg-item"><div class="arg-n">2</div><div><div class="arg-headline">20-year offtakes turn power into bond-like cash flow</div><div class="arg-mech">Microsoft (Crane/TMI, 835 MW) and Meta (Clinton, 1,121 MW) signed two-decade PPAs. That converts a commodity into contracted, inflation-linked revenue. As more capacity gets locked under long contracts, the cash flow deserves a premium multiple, not a utility discount.</div></div></li>
+            <li class="arg-item"><div class="arg-n">3</div><div><div class="arg-headline">Calpine made it accretive and coast-to-coast</div><div class="arg-mech">~$2/share of accretion and ~20% earnings growth target on the deal. CEG now serves customers nationwide with both clean baseload and dispatchable gas — the exact combination data centers need for 24/7 reliability. Scale compounds the contract pipeline.</div></div></li>
+            <li class="arg-item"><div class="arg-n">4</div><div><div class="arg-headline">The de-rate is sentiment, not fundamentals</div><div class="arg-mech">Q1 EPS rose to $2.74 and full-year guidance of $11–$12 was reaffirmed even as the stock fell ~30% from highs. When price falls while earnings rise, the multiple is doing the work. That gap closes when one new hyperscaler deal reminds the market what it owns.</div></div></li>
+            <li class="arg-item"><div class="arg-n">5</div><div><div class="arg-headline">TMI restart is a dated, funded catalyst</div><div class="arg-mech">~$1.6B to restart Crane Clean Energy Center, targeting 2028, with 45Y clean-energy tax-credit eligibility. Each regulatory milestone de-risks 835 MW of contracted Microsoft revenue. The market is paying nothing for an event with a known date and a signed buyer.</div></div></li>
+          </ul>
+        </div>
+        <div class="narr-side bear-side">
+          <div class="narr-header"><div class="narr-icon">↓</div><div class="narr-title">The Bear's Story</div></div>
+          <div class="thesis">"CEG is a great utility that got mistaken for a tech stock. The correction isn't over. You're not buying a moat at a discount — you're buying a momentum unwind that still has utility-multiple gravity pulling it down, with a balance sheet that just got a lot heavier."</div>
+          <ul class="arg-list">
+            <li class="arg-item"><div class="arg-n">1</div><div><div class="arg-headline">Good news no longer moves the stock — that's the tell</div><div class="arg-mech">A Q1 double-beat produced a 6% drop. When the market sells beats, the marginal buyer is exhausted. The de-rate from $412 isn't an overreaction to fix — it's the market correctly removing a premium it should never have paid for a regulated-asset business.</div></div></li>
+            <li class="arg-item"><div class="arg-n">2</div><div><div class="arg-headline">Calpine added ~$12.7B of debt into a higher-rate world</div><div class="arg-mech">Net purchase price ~$26.6B. The leverage that supercharged accretion also amplifies refinancing and rate risk. A $5B divestiture to manage the balance sheet says management feels the weight. Levered utilities don't get growth multiples.</div></div></li>
+            <li class="arg-item"><div class="arg-n">3</div><div><div class="arg-headline">The data-center contract cadence has stalled</div><div class="arg-mech">The whole bull case rests on a steady drumbeat of new hyperscaler PPAs. That drumbeat went quiet in 2026. Without a new signed deal, there is no catalyst to reset the bid — and the stock keeps drifting toward the low end of its range.</div></div></li>
+            <li class="arg-item"><div class="arg-n">4</div><div><div class="arg-headline">Guidance midpoint disappointed and analysts are cutting</div><div class="arg-mech">Argus cut fair value from $425 to $350 explicitly to align CEG with utility, not semiconductor, valuations. When the sell-side anchor moves toward utility math, the multiple compression has a floor far below where momentum traders bought.</div></div></li>
+            <li class="arg-item"><div class="arg-n">5</div><div><div class="arg-headline">Regulatory and PJM risk is unpriced optimism</div><div class="arg-mech">The TMI restart and behind-the-meter data-center hookups depend on PJM grid rules and regulators that haven't fully ruled. A 2028 restart is three years of execution and approval risk. The bull treats it as money in the bank; it isn't yet.</div></div></li>
+          </ul>
+        </div>
+      </div>
+      <div class="narr-verdict">
+        <p>CEG is the rare fight where both corners are telling the truth. The bull owns the assets; the bear owns the tape. The company got genuinely bigger, more profitable, and more strategically central to AI — and the stock fell a third anyway. That only resolves one of two ways: the market was wrong and a new contract snaps it back, or the market is still right and "utility multiple" has another leg down. The next hyperscaler PPA, or its absence, decides which.</p>
+      </div>
+    </div>
+
+    <div id="ap-cats" class="a-panel">
+      <div class="cat-grid">
+        <div class="cat-card bull-card"><div class="cat-when">Q2 2026 earnings · ~Aug 2026</div><div class="cat-event">Reaffirm or raise $11–$12 EPS + new contract color</div><div class="cat-read">Bull trigger: management raises the guide or announces a new hyperscaler PPA. Proof the de-rate overshot. The bid resets fast.</div></div>
+        <div class="cat-card bear-card"><div class="cat-when">Q2 2026 earnings · ~Aug 2026</div><div class="cat-event">Another beat that gets sold</div><div class="cat-read">Bear confirmation: a third straight "good print, lower stock" tells you the multiple is still compressing. Momentum buyers are gone.</div></div>
+        <div class="cat-card bull-card"><div class="cat-when">2026 · Rolling</div><div class="cat-event">New hyperscaler / data-center PPA signed</div><div class="cat-read">The single most powerful bull catalyst. Each 800–1,100 MW deal adds 20 years of contracted cash flow and re-rates the whole fleet.</div></div>
+        <div class="cat-card bear-card"><div class="cat-when">2026–2027</div><div class="cat-event">PJM / FERC ruling on co-located data-center load</div><div class="cat-read">An unfavorable grid-access ruling caps the behind-the-meter model. The bear's structural ceiling on the AI-power thesis.</div></div>
+        <div class="cat-card bull-card"><div class="cat-when">2026–2028</div><div class="cat-event">Crane (TMI Unit 1) restart milestones</div><div class="cat-read">Each NRC and construction milestone de-risks 835 MW of signed Microsoft revenue toward the 2028 in-service date.</div></div>
+        <div class="cat-card bear-card"><div class="cat-when">Refinancing windows</div><div class="cat-event">Calpine debt refinanced at elevated rates</div><div class="cat-read">If rates stay high, the leverage that drove accretion erodes FCF. The balance sheet is bigger now — and so is the rate sensitivity.</div></div>
+      </div>
+    </div>
+
+    <div id="ap-scen" class="a-panel">
+      <div class="scen-grid">
+        <div class="scen-cell bull-cell"><div class="scen-label">▲ Bull base · 18 months</div><div class="scen-headline">A new hyperscaler PPA lands; Calpine debt digests; guidance holds at the high end.</div><div class="scen-body">Earnings compound ~20% as accretion flows through. The market re-rates from utility multiple back toward growth-IPP. Stock recovers toward the $350–400 zone — roughly +30–45% from current levels — as the contract pipeline reopens.</div></div>
+        <div class="scen-cell bear-cell"><div class="scen-label">▼ Bear base · 18 months</div><div class="scen-headline">No new deals; multiple keeps drifting to utility math; debt overhang lingers.</div><div class="scen-body">Earnings grow but the multiple compresses to match a regulated-style IPP. Stock grinds toward the low-$200s / high-$100s — another 15–25% down — as the AI premium fully unwinds and the range low gives way.</div></div>
+        <div class="scen-cell bull-cell"><div class="scen-label">▲ Bull extreme · 3 years</div><div class="scen-headline">CEG becomes the default carbon-free power layer for U.S. AI buildout.</div><div class="scen-body">A steady cadence of 20-year PPAs locks most of the fleet under contract. TMI restarts on time. The market pays a premium for bond-like clean-power cash flow. Stock pushes back above prior highs, potentially +80–100% from here.</div></div>
+        <div class="scen-cell bear-cell"><div class="scen-label">▼ Bear extreme · 3 years</div><div class="scen-headline">PJM rules against co-location; AI power demand cools; rates bite the balance sheet.</div><div class="scen-body">The behind-the-meter model stalls, refinancing consumes FCF, and CEG trades as a leveraged commodity-power utility. Multiple compresses hard; stock revisits the $150 area — down 40%+ — as the entire AI-power equity thesis deflates.</div></div>
+      </div>
+    </div>
+
+    <div id="ap-anat" class="a-panel">
+      <div class="anatomy-wrap">
+        <div class="anat-row"><span class="anat-label">Trade type</span><span class="anat-val">Momentum-unwind / re-rating · large-cap nuclear IPP · post-acquisition</span></div>
+        <div class="anat-row"><span class="anat-label">The bet</span><span class="anat-val">The market overshot the de-rate of an irreplaceable, now-profitable nuclear fleet — and a new contract resets the multiple</span></div>
+        <div class="anat-row"><span class="anat-label">What makes the bull right</span><span class="anat-val up">New hyperscaler PPA signed + Calpine debt digests + guidance holds high end</span></div>
+        <div class="anat-row"><span class="anat-label">What makes the bear right</span><span class="anat-val down">Contract cadence stays stalled + multiple drifts to utility math + refinancing erodes FCF</span></div>
+        <div class="anat-row"><span class="anat-label">The deciding variable</span><span class="anat-val">Does CEG sign another large data-center PPA before the multiple finishes resetting?</span></div>
+        <div class="anat-row"><span class="anat-label">Risk / reward shape</span><span class="anat-val">Asymmetric up on a contract catalyst · but real downside while the momentum unwind runs</span></div>
+        <div class="anat-row"><span class="anat-label">Position sizing logic</span><span class="anat-val">Starter only into the de-rate · add on a new PPA or a beat that finally holds · don't average a falling knife</span></div>
+        <div class="anat-row"><span class="anat-label">Thesis invalidation</span><span class="anat-val down">Adverse PJM/FERC co-location ruling OR guidance cut OR a third straight beat sold hard</span></div>
+        <div class="anat-row" style="border-bottom:none;"><span class="anat-label">Time horizon</span><span class="anat-val">12–24 months · next earnings (~Aug 2026) is the first confirmation window</span></div>
+        <button class="run-btn" onclick="sendPrompt('Deep Dive: CEG, Constellation Energy Corporation')">Run the full Deep Dive on CEG — Constellation Energy →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- THE COMPETITION -->
+  <div class="body-section">
+    <div class="section-label">The competition</div>
+    <table class="comp-table">
+      <thead><tr><th>#</th><th>Competitor</th><th>Symbol</th><th>Similarity</th><th>Lead/Lag</th><th>Key gap</th><th>Threat</th><th>Window</th></tr></thead>
+      <tbody>
+        <tr class="subject"><td>—</td><td>Constellation Energy</td><td class="comp-sym">CEG</td><td>Baseline</td><td>0</td><td>Largest U.S. nuclear fleet · Microsoft + Meta PPAs · post-Calpine scale</td><td>—</td><td>—</td></tr>
+        <tr><td>1</td><td>Vistra Corp</td><td class="comp-sym">VST</td><td>5</td><td>+1</td><td>Gas-heavy Texas fleet + Energy Harbor nuclear · stronger 2026 stock performance</td><td class="threat-high">HIGH</td><td>Now</td></tr>
+        <tr><td>2</td><td>Talen Energy</td><td class="comp-sym">TLN</td><td>5</td><td>−1</td><td>Pure-play IPP, ~10.7 GW (2.2 GW nuclear) · higher beta, smaller scale</td><td class="threat-high">HIGH</td><td>Now</td></tr>
+        <tr><td>3</td><td>NRG Energy</td><td class="comp-sym">NRG</td><td>3</td><td>−1</td><td>Retail + gas focus · chasing AI tailwind without a nuclear moat</td><td class="threat-med">MEDIUM</td><td>12–24 mo</td></tr>
+        <tr><td>4</td><td>NextEra Energy</td><td class="comp-sym">NEE</td><td>2</td><td>+2</td><td>Renewables + nuclear utility · far larger, but regulated model, different buyer</td><td class="threat-low">LOW</td><td>2–3 yr</td></tr>
+      </tbody>
+    </table>
+    <div class="comp-read">CEG is the leader of the pure-play nuclear-AI theme by fleet size and offtake quality — it signed the marquee Microsoft and Meta deals. The tradeable theme proxies are VST (the diversified peer that has held up better in 2026) and TLN (the higher-beta small-cap pure-play). CEG's edge is scarce carbon-free baseload; its disadvantage right now is that the same momentum unwind hitting the whole cohort is hitting the most expensive name hardest.</div>
+  </div>
+
+  <!-- SIGNAL & VERDICT -->
+  <div class="body-section">
+    <div class="section-label">Signal &amp; verdict</div>
+    <div class="signal-box">
+      <div class="signal-head">⚠ WATCH</div>
+      <p>CEG earns a WATCH. The moat is genuinely strong — the largest U.S. nuclear fleet, two marquee 20-year hyperscaler PPAs, and a now-profitable, accretive post-Calpine business [1][2][5]. But the catalysts are mixed and the tape is hostile: every 2026 beat has been sold, analysts are re-rating toward utility multiples, and the data-center contract cadence has stalled [6][7]. No solvency flags — this is investment-grade — but the added Calpine debt and refinancing exposure are real. The single most important thing to watch: does CEG sign another large data-center PPA before the multiple finishes resetting? A new deal flips this toward BUY; continued silence and another sold beat confirm the de-rate. First read at Q2 earnings (~Aug 2026).</p>
+    </div>
+  </div>
+
+  <!-- CITATIONS -->
+  <div class="body-section">
+    <div class="section-label">Citations</div>
+    <div class="cites">
+      <div>[1] Constellation Energy Q1 2026 results — revenue $11.1B (+64% YoY), adj. EPS $2.74, FY26 guidance $11–$12 reaffirmed · TIKR / Investing.com / Yahoo Finance, May 2026</div>
+      <div>[2] Constellation completes $16.4B Calpine acquisition (closed Jan 7, 2026; ~$26.6B net, ~$12.7B debt assumed) · constellationenergy.com / Globe and Mail / FinancialContent</div>
+      <div>[3] Constellation–Microsoft 20-yr PPA, Crane Clean Energy Center (TMI Unit 1, 835 MW, ~$1.6B restart, 2028 target) · CNBC, Utility Dive, DataCenterDynamics</div>
+      <div>[4] Market data: price $274.11, mkt cap ~$98.5B, 52wk range $243.30–$412.70 · Yahoo Finance / stockanalysis.com, June 3, 2026</div>
+      <div>[5] Constellation–Meta 20-yr Clinton PPA (1,121 MW, signed June 3, 2025) · constellationenergy.com / ANS Nuclear Newswire / ESG Dive</div>
+      <div>[6] CEG ~30% off $412 high; Argus fair value cut $425→$350; ~20% YTD decline · The Motley Fool / TIKR, Mar–Jun 2026</div>
+      <div>[7] CEG −6% on May 13, 2026 (guidance midpoint, debt/cost concerns, data-center contract delays) · The Motley Fool / Investing.com / TradingKey</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <span><strong>Equity Research Engine v4.10</strong> · Quick Trade · C19 · C18 · CEG · June 3, 2026</span>
+    <span>AutoMagic Labs · Not a buy/sell recommendation</span>
+  </div>
+
+</div>
+<script>
+function aTab(id,btn){
+  document.querySelectorAll('.a-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.a-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('ap-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
