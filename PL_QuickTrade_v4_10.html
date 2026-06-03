@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PL — Planet Labs PBC · Quick Trade · Equity Research Engine v4.10</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Merriweather:ital,wght@0,700;0,900;1,400&display=swap');
+
+  :root {
+    --teal: #0F172A;
+    --teal-light: #F8FAFC;
+    --teal-mid: #475569;
+    --teal-dark: #020617;
+    --bull: #059669;
+    --bull-light: #ECFDF5;
+    --bull-mid: #10B981;
+    --bear: #BE123C;
+    --bear-light: #FFF1F2;
+    --bear-mid: #E11D48;
+    --amber: #B45309;
+    --amber-light: #FFFBEB;
+    --text: #1E293B;
+    --text-muted: #64748B;
+    --text-light: #94A3B8;
+    --bg: #F1F5F9;
+    --bg-card: #FFFFFF;
+    --border: rgba(15, 23, 42, 0.08);
+    --border-light: rgba(15, 23, 42, 0.04);
+    --gold: #D97706;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  .page { max-width: 760px; margin: 3rem auto; background: var(--bg-card); box-shadow: 0 10px 40px rgba(0,0,0,.04), 0 1px 3px rgba(0,0,0,.02); min-height: 100vh; border-radius: 8px; overflow: hidden; }
+
+  /* MASTHEAD */
+  .masthead { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 2.5rem 3rem; display: flex; justify-content: space-between; align-items: center; gap: 2rem; }
+  .engine-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: .15em; text-transform: uppercase; color: var(--teal-mid); margin-bottom: 10px; }
+  .ticker-name { font-family: 'Merriweather', serif; font-size: 32px; font-weight: 900; line-height: 1.1; color: var(--teal-dark); letter-spacing: -0.02em; }
+  .company-name { font-size: 13px; color: var(--text-muted); margin-top: 6px; font-weight: 400; }
+  .biz-snap { background: var(--teal-light); border: 1px solid var(--border); border-left: 3px solid var(--teal); border-radius: 0 6px 6px 0; padding: 1rem 1.25rem; min-width: 220px; }
+  .biz-snap-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: .15em; text-transform: uppercase; color: var(--teal); margin-bottom: 12px; }
+  .biz-row { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; border-bottom: 1px solid var(--border-light); }
+  .biz-row:last-child { border-bottom: none; }
+  .biz-key { font-size: 11px; color: var(--text-muted); }
+  .biz-val { font-size: 11px; color: var(--text); font-weight: 500; }
+
+  /* COCKPIT */
+  .section { padding: 2rem 3rem; border-bottom: 1px solid var(--border-light); }
+  .section-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: .15em; text-transform: uppercase; color: var(--teal); margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .tldr-block { font-size: 15px; line-height: 1.7; padding: 18px 24px; background: var(--teal-light); border-left: 3px solid var(--teal); border-radius: 0 6px 6px 0; }
+  .tldr-block strong { color: var(--teal-dark); font-weight: 600; }
+
+  /* THE NUMBERS */
+  .numbers-section { padding: 2rem 3rem; border-bottom: 1px solid var(--border-light); }
+  .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-top: 3px solid var(--teal); border-radius: 0 0 6px 6px; padding: 1.25rem 1.25rem; }
+  .stat-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  .stat-value { font-size: 22px; font-weight: 700; color: var(--teal-dark); line-height: 1.1; font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+  .stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 6px; line-height: 1.4; }
+  .stat-value.up { color: var(--bull); }
+  .stat-value.down { color: var(--bear); }
+  .stat-value.warn { color: var(--amber); }
+
+  /* C19 NEWS PATTERN */
+  .c19-wrap { border-bottom: 1px solid var(--border-light); }
+  .c19-head { padding: 1.5rem 3rem 0.5rem; }
+  .c19-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: .15em; text-transform: uppercase; color: var(--teal); }
+  .timeline { overflow-x: auto; padding: 1.5rem 3rem; background: white; }
+  .timeline-inner { display: flex; gap: 12px; min-width: max-content; align-items: stretch; }
+  .ev { border-radius: 6px; padding: 14px 16px; min-width: 170px; max-width: 190px; border: 1px solid; }
+  .ev.pos { background: var(--bull-light); border-color: #A7F3D0; }
+  .ev.neg { background: var(--bear-light); border-color: #FECDD3; }
+  .ev.flat { background: var(--teal-light); border-color: var(--border); }
+  .ev-date { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+  .ev.pos .ev-date { color: var(--bull-mid); }
+  .ev.neg .ev-date { color: var(--bear-mid); }
+  .ev.flat .ev-date { color: var(--text-muted); }
+  .ev-name { font-size: 12px; font-weight: 500; margin-bottom: 6px; line-height: 1.4; color: var(--text); }
+  .ev-type { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
+  .ev-rx { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .ev.pos .ev-rx { color: var(--bull); }
+  .ev.neg .ev-rx { color: var(--bear); }
+  .ev.flat .ev-rx { color: var(--text-muted); }
+  .ev-read { font-size: 11px; color: var(--text-muted); margin-top: 6px; line-height: 1.5; }
+  .c19-framing { padding: 1.25rem 3rem; background: var(--teal-light); border-top: 1px solid var(--border-light); }
+  .c19-framing-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: .15em; text-transform: uppercase; color: var(--teal); margin-right: 12px; }
+  .c19-framing-text { font-size: 12px; color: var(--text-muted); font-style: italic; }
+
+  /* ARENA */
+  .arena-wrap { background: var(--teal-light); border-top: 3px solid var(--teal-dark); }
+  .arena-head { background: var(--teal-dark); color: white; padding: 2rem 3rem; }
+  .arena-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: .15em; text-transform: uppercase; color: rgba(255,255,255,.5); margin-bottom: 8px; }
+  .arena-title { font-family: 'Merriweather', serif; font-size: 24px; font-weight: 900; color: white; letter-spacing: -0.01em; }
+  .arena-sub { font-size: 14px; color: rgba(255,255,255,.7); font-weight: 400; margin-top: 6px; }
+  .arena-sub strong { color: white; font-weight: 500; }
+  .arena-disc { font-size: 11px; color: rgba(255,255,255,.4); margin-top: 10px; }
+  .arena-tabs { display: flex; background: white; border-bottom: 1px solid var(--border); padding: 0 3rem; flex-wrap: wrap; }
+  .a-tab { padding: 14px 0; margin-right: 24px; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; transition: all .2s; }
+  .a-tab:hover { color: var(--teal); }
+  .a-tab.active { color: var(--teal-dark); border-bottom-color: var(--teal-dark); }
+  .a-panel { display: none; }
+  .a-panel.active { display: block; }
+
+  /* NARRATIVES */
+  .narr-grid { display: grid; grid-template-columns: 1fr 1fr; background: white; }
+  .narr-side { padding: 2rem 2.5rem; }
+  .narr-side.bull-side { border-right: 1px solid var(--border-light); }
+  .narr-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid; }
+  .bull-side .narr-header { border-color: var(--bull); }
+  .bear-side .narr-header { border-color: var(--bear); }
+  .narr-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; flex-shrink: 0; }
+  .bull-side .narr-icon { background: var(--bull-light); color: var(--bull); }
+  .bear-side .narr-icon { background: var(--bear-light); color: var(--bear); }
+  .narr-title { font-family: 'Merriweather', serif; font-size: 16px; font-weight: 700; }
+  .bull-side .narr-title { color: var(--bull); }
+  .bear-side .narr-title { color: var(--bear); }
+  .thesis { font-size: 13px; font-style: italic; line-height: 1.6; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; border-left: 3px solid; }
+  .bull-side .thesis { background: var(--bull-light); color: #065F46; border-color: var(--bull-mid); }
+  .bear-side .thesis { background: var(--bear-light); color: #9F1239; border-color: var(--bear-mid); }
+  .arg-list { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+  .arg-item { display: flex; gap: 12px; align-items: flex-start; }
+  .arg-n { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600; flex-shrink: 0; margin-top: 2px; }
+  .bull-side .arg-n { background: var(--bull-light); color: var(--bull); }
+  .bear-side .arg-n { background: var(--bear-light); color: var(--bear); }
+  .arg-headline { font-size: 13px; font-weight: 600; line-height: 1.4; margin-bottom: 4px; color: var(--text); }
+  .arg-mech { font-size: 12px; color: var(--text-muted); line-height: 1.55; }
+  .narr-verdict { padding: 1.5rem 3rem; background: white; border-top: 1px solid var(--border-light); }
+  .narr-verdict p { font-size: 13px; color: var(--text-muted); font-style: italic; border-left: 2px solid var(--gold); padding-left: 14px; line-height: 1.7; }
+
+  /* CATALYST CLOCK */
+  .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 2rem 3rem; background: white; }
+  .cat-card { border-radius: 8px; padding: 16px; border: 1px solid; }
+  .cat-card.bull-card { background: var(--bull-light); border-color: #A7F3D0; }
+  .cat-card.bear-card { background: var(--bear-light); border-color: #FECDD3; }
+  .cat-when { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px; }
+  .bull-card .cat-when { color: var(--bull-mid); }
+  .bear-card .cat-when { color: var(--bear-mid); }
+  .cat-event { font-size: 13px; font-weight: 600; line-height: 1.4; margin-bottom: 6px; color: var(--text); }
+  .cat-read { font-size: 12px; color: var(--text-muted); line-height: 1.55; }
+
+  /* SCENARIOS */
+  .scen-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); margin: 2rem 3rem; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+  .scen-cell { padding: 1.5rem; background: white; }
+  .scen-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 8px; }
+  .scen-cell.bull-cell .scen-label { color: var(--bull); }
+  .scen-cell.bear-cell .scen-label { color: var(--bear); }
+  .scen-headline { font-size: 13px; font-weight: 600; line-height: 1.4; margin-bottom: 8px; color: var(--text); }
+  .scen-body { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+
+  /* TRADE ANATOMY */
+  .anatomy-wrap { padding: 2rem 3rem; background: white; }
+  .anat-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border-light); gap: 24px; }
+  .anat-label { font-size: 12px; color: var(--text-muted); min-width: 180px; flex-shrink: 0; font-weight: 500; }
+  .anat-val { font-size: 13px; color: var(--text); text-align: right; line-height: 1.5; }
+  .anat-val.up { color: var(--bull); font-weight: 500; }
+  .anat-val.down { color: var(--bear); font-weight: 500; }
+  .run-btn { display: block; width: 100%; margin-top: 1.5rem; padding: 14px 20px; background: var(--teal-dark); color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+  .run-btn:hover { background: var(--teal-mid); }
+
+  /* THE COMPETITION MATRIX */
+  .body-section { padding: 2rem 3rem; border-bottom: 1px solid var(--border-light); }
+  .comp-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .comp-table th { background: var(--teal-light); color: var(--text-muted); font-weight: 600; text-align: left; padding: 10px 12px; font-size: 10px; letter-spacing: .05em; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+  .comp-table td { padding: 12px; border-bottom: 1px solid var(--border-light); color: var(--text); vertical-align: top; }
+  .comp-table tr.subject td { background: #EDF2F7; font-weight: 600; color: var(--teal-dark); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .comp-table tr:not(.subject):nth-child(even) td { background: var(--teal-light); }
+  .comp-table tr:not(.subject):nth-child(odd) td { background: #FFFFFF; }
+  .comp-sym { font-family: 'JetBrains Mono', monospace; font-weight: 500; color: var(--teal-dark); }
+  .threat-high { color: var(--bear); font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+  .threat-med { color: var(--amber); font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+  .threat-low { color: var(--text-light); font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+  .comp-read { font-size: 12px; color: var(--text-muted); font-style: italic; margin-top: 16px; line-height: 1.6; padding: 12px 16px; background: var(--teal-light); border-radius: 6px; }
+
+  /* SIGNAL */
+  .signal-box { background: var(--amber-light); border: 1px solid rgba(180, 83, 9, 0.2); border-left: 4px solid var(--amber); border-radius: 0 6px 6px 0; padding: 20px 24px; }
+  .signal-head { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: var(--amber); margin-bottom: 10px; letter-spacing: 0.05em; }
+  .signal-box p { font-size: 14px; color: var(--text); line-height: 1.7; }
+
+  /* CITATIONS */
+  .cites { font-size: 11px; color: var(--text-muted); line-height: 1.6; }
+  .cites div { padding: 4px 0; border-bottom: 1px dashed var(--border-light); }
+  .cites div:last-child { border-bottom: none; }
+
+  /* FOOTER */
+  .footer { background: var(--teal-dark); color: rgba(255,255,255,.5); padding: 1.5rem 3rem; font-size: 11px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  .footer strong { color: white; }
+
+  @media(max-width:600px){
+    .masthead, .section, .numbers-section, .c19-head, .timeline, .c19-framing, .arena-head, .arena-tabs, .narr-side, .narr-verdict, .cat-grid, .anatomy-wrap, .body-section, .footer { padding-left: 1.5rem; padding-right: 1.5rem; }
+    .masthead { flex-direction: column; align-items: flex-start; }
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+    .narr-grid, .cat-grid, .scen-grid { grid-template-columns: 1fr; }
+    .narr-side.bull-side { border-right: none; border-bottom: 1px solid var(--border-light); }
+    .scen-grid { margin: 1.5rem; }
+    .anat-row { flex-direction: column; gap: 4px; }
+    .anat-val { text-align: left; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- MASTHEAD -->
+  <div class="masthead">
+    <div style="flex:1;">
+      <div class="engine-label">Equity Research Engine v4.10 · Quick Trade</div>
+      <div class="ticker-name">PL — Planet Labs PBC</div>
+      <div class="company-name">Planet Labs PBC · Earth Observation &amp; Geospatial Intelligence · NYSE: PL</div>
+    </div>
+    <div class="biz-snap">
+      <div class="biz-snap-label">Company snapshot</div>
+      <div class="biz-row"><span class="biz-key">Category</span><span class="biz-val">Satellite imagery / Geoint</span></div>
+      <div class="biz-row"><span class="biz-key">Growth stage</span><span class="biz-val">Scaling · first profit (adj EBITDA)</span></div>
+    </div>
+  </div>
+
+  <!-- COCKPIT -->
+  <div class="section">
+    <div class="section-label">Cockpit</div>
+    <div class="tldr-block">
+      <strong>PL — WATCH.</strong> A satellite-imagery company that just got repriced from a chronic cash-burner into a defense-intelligence infrastructure play, up 403% in twelve months on a $151B-ceiling Pentagon contract vehicle, NATO and sovereign-government deals, and AI running in orbit on NVIDIA chips [5][6]. The fundamentals finally match the story — record $308M revenue, first profitable year on adjusted EBITDA, $640M cash, and a backlog up ~79% to ~$900M [1][2]. The problem isn't the company; it's the entry: at ~50x sales the stock trades above every one of the 11 analyst price targets [4], and a binary Q1 FY27 earnings print lands <strong>tomorrow, June 4</strong>, with options pricing an 18% move [4]. The deciding question: do you buy a great company the day before a coin-flip you can't handicap?
+    </div>
+  </div>
+
+  <!-- THE NUMBERS -->
+  <div class="numbers-section">
+    <div class="section-label">The numbers</div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-label">Price</div><div class="stat-value">$42.96</div></div>
+      <div class="stat-card"><div class="stat-label">Mkt Cap</div><div class="stat-value">$15.3B</div></div>
+      <div class="stat-card"><div class="stat-label">52wk Range</div><div class="stat-value" style="font-size:15px;">$3.76–$51.76</div></div>
+      <div class="stat-card"><div class="stat-label">Rev YoY Growth</div><div class="stat-value up">+41%</div><div class="stat-sub">Q4 FY26 vs Q4 FY25 ($86.8M)</div></div>
+      <div class="stat-card"><div class="stat-label">Rev QoQ Growth</div><div class="stat-value up">+7%</div><div class="stat-sub">Q4 vs Q3 FY26 ($86.8M vs $81.3M)</div></div>
+      <div class="stat-card"><div class="stat-label">Cash / Runway</div><div class="stat-value up">$640M</div><div class="stat-sub">FCF +$53M FY26 · no runway risk</div></div>
+    </div>
+  </div>
+
+  <!-- C19 NEWS PATTERN -->
+  <div class="c19-wrap">
+    <div class="c19-head">
+      <div class="c19-eyebrow">C19 · The News Pattern · PIVOT · Confidence: HIGH</div>
+    </div>
+    <div class="timeline">
+      <div class="timeline-inner">
+        <div class="ev pos"><div class="ev-date">Dec 2025</div><div class="ev-name">Q3 FY26 — revenue +33% YoY, backlog triples</div><div class="ev-type">EARNINGS</div><div class="ev-rx">+ Re-rate leg</div><div class="ev-read">Growth + profitability inflection. Market starts paying for the story.</div></div>
+        <div class="ev pos"><div class="ev-date">Mar 19, 2026</div><div class="ev-name">Q4 FY26 — record $308M FY rev, first profitable year</div><div class="ev-type">EARNINGS</div><div class="ev-rx">+ Beat ($86.8M vs ~$78M)</div><div class="ev-read">First adj-EBITDA-positive year. Backlog ~$900M. Thesis confirmed.</div></div>
+        <div class="ev neg"><div class="ev-date">Apr 2026</div><div class="ev-name">Iran imagery blackout at U.S. request</div><div class="ev-type">COMPLIANCE</div><div class="ev-rx">Mixed signal</div><div class="ev-read">Proof of national-security relevance — and of government leverage over the data.</div></div>
+        <div class="ev pos"><div class="ev-date">Apr 7, 2026</div><div class="ev-name">Planet runs AI in space (NVIDIA-powered)</div><div class="ev-type">PRODUCT</div><div class="ev-rx">+ Sentiment</div><div class="ev-read">On-orbit AI = faster insight. Hardens the "infrastructure layer" identity.</div></div>
+        <div class="ev pos"><div class="ev-date">May 3–14, 2026</div><div class="ev-name">Pelican launch — Sweden's first sovereign satellite</div><div class="ev-type">PRODUCT</div><div class="ev-rx">+10% range</div><div class="ev-read">Sovereign-fleet model lands a paying flag. Repeatable across allied states.</div></div>
+        <div class="ev pos"><div class="ev-date">May 2026</div><div class="ev-name">SHIELD IDIQ prime ($151B ceiling) + NATO renewal</div><div class="ev-type">PIVOT</div><div class="ev-rx">+ Vertical move</div><div class="ev-read">The repricing event. Planet is now a defense-intelligence prime, not an imagery SaaS.</div></div>
+        <div class="ev flat"><div class="ev-date">Jun 4, 2026</div><div class="ev-name">Q1 FY27 earnings — the next verdict (tomorrow)</div><div class="ev-type">EARNINGS</div><div class="ev-rx">±18% implied</div><div class="ev-read">Priced for perfection. The auction decides if the new identity holds.</div></div>
+      </div>
+    </div>
+    <div class="c19-framing">
+      <span class="c19-framing-label">Arena framing</span>
+      <span class="c19-framing-text">The old thesis is dead. Both narratives must be written from the new identity: Planet as sovereign/defense space-intelligence infrastructure, not a commercial-imagery cash-burner. Before: a SPAC that bled money selling pictures of farms. After: a Pentagon and NATO prime with a $900M backlog and AI in orbit. The bull argues the re-rating is the start; the bear argues it is the top.</span>
+    </div>
+  </div>
+
+  <!-- C18 THE ARENA -->
+  <div class="arena-wrap">
+    <div class="arena-head">
+      <div class="arena-eyebrow">C18 · Equity Research Engine v4.10 · Quick Trade</div>
+      <div class="arena-title">The Arena</div>
+      <div class="arena-sub"><strong>Bull vs. Bear · Forward conviction narrative · Derived from verified report findings</strong></div>
+      <div class="arena-disc">No new citations · Not a buy/sell recommendation</div>
+    </div>
+    <div class="arena-tabs">
+      <button class="a-tab active" onclick="aTab('narr',this)">Narratives</button>
+      <button class="a-tab" onclick="aTab('cats',this)">Catalyst clock</button>
+      <button class="a-tab" onclick="aTab('scen',this)">Scenarios</button>
+      <button class="a-tab" onclick="aTab('anat',this)">Trade anatomy</button>
+    </div>
+
+    <div id="ap-narr" class="a-panel active">
+      <div class="narr-grid">
+        <div class="narr-side bull-side">
+          <div class="narr-header"><div class="narr-icon">↑</div><div class="narr-title">The Bull's Story</div></div>
+          <div class="thesis">"Before: a SPAC bleeding cash selling pictures of farmland. After: the public-market vehicle for allied geospatial-intelligence infrastructure. The $151B SHIELD vehicle and a $900M backlog say the re-rating has barely started."</div>
+          <ul class="arg-list">
+            <li class="arg-item"><div class="arg-n">1</div><div><div class="arg-headline">SHIELD IDIQ makes Planet a defense prime, not a vendor</div><div class="arg-mech">A $151B-ceiling contract vehicle is a license to bid on a decade of missile-defense and intelligence work. Primes get sole-source follow-ons. One vehicle converts Planet from "imagery supplier" to embedded infrastructure the Pentagon plans budgets around.</div></div></li>
+            <li class="arg-item"><div class="arg-n">2</div><div><div class="arg-headline">Backlog up 79% to ~$900M is contracted future revenue</div><div class="arg-mech">RPOs jumped ~106% to $852M. That is signed, multi-year demand — not pipeline. It de-risks FY27–FY28 guidance and means the growth rate is funded by paper already in hand, not hope.</div></div></li>
+            <li class="arg-item"><div class="arg-n">3</div><div><div class="arg-headline">The sovereign-satellite model is a repeatable flywheel</div><div class="arg-mech">Sweden bought its "first sovereign satellite" on Planet's fleet. Every allied nation that wants independent eyes without launching its own program is a copy-paste deal. Germany, NATO, and others are already in the funnel — each one recurring.</div></div></li>
+            <li class="arg-item"><div class="arg-n">4</div><div><div class="arg-headline">First profitable year flips the cash-burn objection</div><div class="arg-mech">FY26 delivered $15.5M adjusted EBITDA and $53M free cash flow with $640M in the bank. The single biggest bear argument for three years — "they never make money" — just died. Profitability plus a fortress balance sheet removes dilution risk.</div></div></li>
+            <li class="arg-item"><div class="arg-n">5</div><div><div class="arg-headline">AI in orbit widens the moat from imagery to insight</div><div class="arg-mech">Running NVIDIA-powered AI on the satellite means answers, not pixels, delivered faster. That shifts Planet up the value chain into analytics — higher margin, stickier, and far harder for a launch-only rival to replicate.</div></div></li>
+          </ul>
+        </div>
+        <div class="narr-side bear-side">
+          <div class="narr-header"><div class="narr-icon">↓</div><div class="narr-title">The Bear's Story</div></div>
+          <div class="thesis">"Everything the bull says is true — and already in the price twice over. At ~50x sales and above every analyst target, PL is priced for a future that hasn't been earned. A 403% run meets a binary earnings print tomorrow. The asymmetry now points down."</div>
+          <ul class="arg-list">
+            <li class="arg-item"><div class="arg-n">1</div><div><div class="arg-headline">Trades above all 11 analyst price targets</div><div class="arg-mech">The average 12-month target is $35.50; the stock is $42.96. The people who model this for a living think it is worth ~17% less than today. When price runs past the most bullish professional estimates, the marginal buyer is momentum, not value — and momentum reverses fast.</div></div></li>
+            <li class="arg-item"><div class="arg-n">2</div><div><div class="arg-headline">~50x sales on a hardware-heavy business</div><div class="arg-mech">A $15.3B cap on $308M revenue is a software multiple bolted onto a company that launches satellites and burns capex. If growth merely meets the $415–440M FY27 guide instead of crushing it, the multiple compresses violently. Great execution can still mean a falling stock.</div></div></li>
+            <li class="arg-item"><div class="arg-n">3</div><div><div class="arg-headline">A binary earnings print lands tomorrow</div><div class="arg-mech">Q1 FY27 reports June 4 with an 18% implied move. Buying the day before is not investing — it is taking a coin-flip at the worst possible odds, where a good quarter is "expected" and any wobble in guidance triggers a gap down through the stops.</div></div></li>
+            <li class="arg-item"><div class="arg-n">4</div><div><div class="arg-headline">GAAP losses widened to ~$247M</div><div class="arg-mech">Adjusted EBITDA is positive, but the GAAP bottom line lost ~$247M in FY26, worse than the prior year. The "profitability" headline rests on adjustments. Bears point to the real income statement when sentiment turns and "adjusted" stops being good enough.</div></div></li>
+            <li class="arg-item"><div class="arg-n">5</div><div><div class="arg-headline">Government leverage cuts both ways</div><div class="arg-mech">The Iran blackout proved Washington can switch Planet's product off on demand. Concentrated defense revenue means budget cycles, political turnover, and contract timing now drive the stock. The same government tailwind becomes a headline risk the moment priorities shift.</div></div></li>
+          </ul>
+        </div>
+      </div>
+      <div class="narr-verdict">
+        <p>PL is a fighter who spent three years on the ropes and just landed the knockout combination — and the crowd has already bet the rent on the rematch. The bull is right about the company. The bear is right about the ticket price. Both can be correct, and a trader buying tonight only learns which one matters at 4:01pm tomorrow. The business deserves respect; the entry deserves discipline.</p>
+      </div>
+    </div>
+
+    <div id="ap-cats" class="a-panel">
+      <div class="cat-grid">
+        <div class="cat-card bull-card"><div class="cat-when">Jun 4, 2026 · Confirmed</div><div class="cat-event">Q1 FY27 earnings — beat + raise</div><div class="cat-read">Bull trigger: revenue tops the $87–91M guide AND management raises the FY27 range on defense momentum. That converts "priced for perfection" into "guidance chasing the stock up."</div></div>
+        <div class="cat-card bear-card"><div class="cat-when">Jun 4, 2026 · Same event</div><div class="cat-event">Q1 FY27 earnings — in-line, no raise</div><div class="cat-read">Bear confirmation: merely meeting guidance at ~50x sales is a sell. An 18% implied move with the bar this high means "fine" prints as a gap-down.</div></div>
+        <div class="cat-card bull-card"><div class="cat-when">FY27 · Rolling</div><div class="cat-event">New sovereign / allied satellite deals</div><div class="cat-read">Each Sweden-style sovereign contract proves the flywheel repeats. Germany and other NATO states in the funnel; every signing extends the backlog and the narrative.</div></div>
+        <div class="cat-card bear-card"><div class="cat-when">Rolling · Ongoing</div><div class="cat-event">BlackSky / Satellogic contract wins</div><div class="cat-read">A rival landing a marquee defense or sovereign deal proves the moat is shared, not owned — and pressures the premium multiple Planet trades on.</div></div>
+        <div class="cat-card bull-card"><div class="cat-when">2026–2027</div><div class="cat-event">SHIELD task orders awarded</div><div class="cat-read">The $151B vehicle is a ceiling, not a check. First real task orders booked into revenue would validate the defense-prime thesis in hard numbers.</div></div>
+        <div class="cat-card bear-card"><div class="cat-when">Any time</div><div class="cat-event">Defense budget / political timing shock</div><div class="cat-read">A continuing resolution, program delay, or policy shift stalls bookings. Concentrated government revenue means Washington's calendar now sets the stock's.</div></div>
+      </div>
+    </div>
+
+    <div id="ap-scen" class="a-panel">
+      <div class="scen-grid">
+        <div class="scen-cell bull-cell"><div class="scen-label">▲ Bull base · 18 months</div><div class="scen-headline">Q1 beat-and-raise; SHIELD task orders start booking; backlog tops $1B.</div><div class="scen-body">FY27 revenue lands at the top of or above the $415–440M guide. Defense becomes the majority of new bookings. The multiple holds as growth catches up to it. Stock re-rates another 30–50% toward the high $50s–$60s.</div></div>
+        <div class="scen-cell bear-cell"><div class="scen-label">▼ Bear base · 18 months</div><div class="scen-headline">Growth merely meets guidance; the multiple does the work it always does.</div><div class="scen-body">Revenue hits ~$420M — fine, not spectacular. At ~50x sales, "fine" compresses the multiple. The stock gives back the parabola and settles toward the analyst-target zone, down 30–45% to the high $20s–low $30s.</div></div>
+        <div class="scen-cell bull-cell"><div class="scen-label">▲ Bull extreme · 3 years</div><div class="scen-headline">Planet becomes the default allied geoint infrastructure layer.</div><div class="scen-body">SHIELD and sovereign deals compound into $700M–$1B revenue with expanding analytics margins. Re-rates as a defense-tech platform, not a SPAC. Stock multiples from here; strategic or sovereign acquirer interest emerges.</div></div>
+        <div class="scen-cell bear-cell"><div class="scen-label">▼ Bear extreme · 3 years</div><div class="scen-headline">Defense spend normalizes, rivals commoditize imagery, the premium evaporates.</div><div class="scen-body">BlackSky and Satellogic split the allied market; pricing pressure caps margins; a budget cycle stalls bookings. Revenue grows but the multiple halves and halves again. Stock returns toward the low teens — the 403% run unwinds.</div></div>
+      </div>
+    </div>
+
+    <div id="ap-anat" class="a-panel">
+      <div class="anatomy-wrap">
+        <div class="anat-row"><span class="anat-label">Trade type</span><span class="anat-val">Momentum re-rating · defense/space infrastructure · post-pivot, pre-multiple-proof</span></div>
+        <div class="anat-row"><span class="anat-label">The bet</span><span class="anat-val">Defense + sovereign demand compounds fast enough that ~50x sales becomes ~20x by growing into it, not by falling</span></div>
+        <div class="anat-row"><span class="anat-label">What makes the bull right</span><span class="anat-val up">Q1 beat-and-raise + SHIELD task orders book + new sovereign deals extend backlog past $1B</span></div>
+        <div class="anat-row"><span class="anat-label">What makes the bear right</span><span class="anat-val down">In-line print with no raise + multiple compression + a rival lands a marquee defense win</span></div>
+        <div class="anat-row"><span class="anat-label">The deciding variable</span><span class="anat-val">Q1 FY27 guidance revision on June 4 — raise vs. hold</span></div>
+        <div class="anat-row"><span class="anat-label">Risk / reward shape</span><span class="anat-val down">Asymmetric down into the print · above all analyst targets, 18% implied move, "fine" is a sell</span></div>
+        <div class="anat-row"><span class="anat-label">Position sizing logic</span><span class="anat-val">No new size before earnings · let the print clear, then start a position on the reaction, not the rumor</span></div>
+        <div class="anat-row"><span class="anat-label">Thesis invalidation</span><span class="anat-val down">FY27 guidance cut or held flat, OR two quarters of decelerating bookings, OR a lost defense/sovereign award</span></div>
+        <div class="anat-row" style="border-bottom:none;"><span class="anat-label">Time horizon</span><span class="anat-val">12–36 months · but the first gate is tomorrow, June 4 — wait for it</span></div>
+        <button class="run-btn" onclick="sendPrompt('Run the full Equity Research Engine v4.10 analysis on PL — Planet Labs PBC')">Run the full Deep Dive on PL — Planet Labs PBC →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- THE COMPETITION -->
+  <div class="body-section">
+    <div class="section-label">The competition</div>
+    <table class="comp-table">
+      <thead><tr><th>#</th><th>Competitor</th><th>Symbol</th><th>Similarity</th><th>Lead/Lag</th><th>Key gap</th><th>Threat</th><th>Window</th></tr></thead>
+      <tbody>
+        <tr class="subject"><td>—</td><td>Planet Labs PBC</td><td class="comp-sym">PL</td><td>Baseline</td><td>0</td><td>Broadest fleet, ~$900M backlog, defense prime, AI in orbit</td><td>—</td><td>—</td></tr>
+        <tr><td>1</td><td>BlackSky Technology</td><td class="comp-sym">BKSY</td><td>5</td><td>–1</td><td>Real-time tasking, Gen-3 high-res; smaller revenue/backlog than PL</td><td class="threat-high">HIGH</td><td>Now</td></tr>
+        <tr><td>2</td><td>Maxar Intelligence</td><td class="comp-sym">Private</td><td>4</td><td>+1</td><td>Entrenched high-res gov incumbent (Advent-owned); not publicly tradeable</td><td class="threat-high">HIGH</td><td>Now</td></tr>
+        <tr><td>3</td><td>Satellogic</td><td class="comp-sym">SATL</td><td>4</td><td>–2</td><td>Non-ITAR 30cm fleet, Merlin constellation 2026; sub-scale today</td><td class="threat-med">MEDIUM</td><td>12–24 mo</td></tr>
+        <tr><td>4</td><td>Rocket Lab</td><td class="comp-sym">RKLB</td><td>2</td><td>+2</td><td>Launch + space systems; theme proxy, not a direct imagery rival</td><td class="threat-med">MEDIUM</td><td>Adjacent</td></tr>
+        <tr><td>5</td><td>Palantir</td><td class="comp-sym">PLTR</td><td>2</td><td>+3</td><td>Geoint analytics layer; partner as much as rival, far larger scale</td><td class="threat-low">LOW</td><td>Adjacent</td></tr>
+      </tbody>
+    </table>
+    <div class="comp-read">Planet sits at the front of the pure-play earth-observation pack — broadest fleet, biggest backlog, and the only one with a $151B defense vehicle and AI in orbit. Its real near-peer is <strong>BKSY</strong> (faster tasking, smaller scale); <strong>SATL</strong> is the cheaper, sub-scale wildcard. Maxar is the entrenched incumbent but private. For theme exposure without the binary, traders use large-cap proxies <strong>RKLB</strong> (space) and <strong>PLTR</strong> (defense analytics); <strong>PL</strong> is the small-cap-grown-large pure play on the data itself.</div>
+  </div>
+
+  <!-- SIGNAL & VERDICT -->
+  <div class="body-section">
+    <div class="section-label">Signal &amp; verdict</div>
+    <div class="signal-box">
+      <div class="signal-head">⚠ WATCH</div>
+      <p>PL earns a WATCH — a strong business at a dangerous entry. The pivot is real and the moat is widening: a $151B defense vehicle, ~$900M backlog, first profitable year, $640M cash, and AI running in orbit. But the stock is up 403% in a year, trades at ~50x sales above every one of the 11 analyst price targets, and faces a binary Q1 FY27 print tomorrow (June 4) with an 18% implied move. Catalysts are genuinely two-sided and the asymmetry tilts down into the event. The single most important thing to watch: <strong>does management raise FY27 guidance on June 4, or merely hold it?</strong> A raise validates the multiple; a hold makes "fine" a sell. Let the print clear before sizing.</p>
+    </div>
+  </div>
+
+  <!-- CITATIONS -->
+  <div class="body-section">
+    <div class="section-label">Citations</div>
+    <div class="cites">
+      <div>[1] Planet Labs PBC Q4 &amp; FY2026 Earnings Release / Form 8-K, Mar 19, 2026 · sec.gov · investing.com (record $308M rev, $640M cash, $53M FCF, $15.5M adj EBITDA, ~$900M backlog, RPO +106%)</div>
+      <div>[2] Planet Labs Q4 FY2026 Earnings Call Transcript, Mar 19, 2026 · fool.com / Globe and Mail (Q4 rev $86.8M, +41% YoY; FY27 guide $415–440M; Q1 FY27 guide $87–91M)</div>
+      <div>[3] Planet Labs Q3 FY2026 results, Dec 10, 2025 · investing.com / ainvest.com (Q3 rev $81.3M, +33% YoY, backlog triples)</div>
+      <div>[4] Market data: price $42.96, mkt cap $15.31B, 52wk $3.76–$51.76, 11 analysts avg "Buy" PT $35.50, Q1 FY27 earnings Jun 4 2026, 18.1% implied move · stockanalysis.com / cnbc.com, Jun 3, 2026</div>
+      <div>[5] NATO/SHIELD IDIQ ($151B ceiling) prime selection + NATO renewal · stocktitan.net / merlintrader.com, May 2026</div>
+      <div>[6] Planet runs AI in space (NVIDIA) Apr 7 2026; Pelican launch + Sweden sovereign satellite May 2026; Iran imagery blackout Apr 2026 · businesswire.com / satnews.com</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <span><strong>Equity Research Engine v4.10</strong> · Quick Trade · C19 · C18 · PL · June 3, 2026</span>
+    <span>AutoMagic Labs · Not a buy/sell recommendation</span>
+  </div>
+
+</div>
+<script>
+function aTab(id,btn){
+  document.querySelectorAll('.a-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.a-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('ap-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
