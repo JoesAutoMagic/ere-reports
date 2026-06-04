@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DFTX — Definium Therapeutics · Quick Trade · Equity Research Engine v4.10</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Merriweather:ital,wght@0,700;0,900;1,400&display=swap');
+
+  :root {
+    --teal: #0F172A;
+    --teal-light: #F8FAFC;
+    --teal-mid: #475569;
+    --teal-dark: #020617;
+    --bull: #059669;
+    --bull-light: #ECFDF5;
+    --bull-mid: #10B981;
+    --bear: #BE123C;
+    --bear-light: #FFF1F2;
+    --bear-mid: #E11D48;
+    --amber: #B45309;
+    --amber-light: #FFFBEB;
+    --text: #1E293B;
+    --text-muted: #64748B;
+    --text-light: #94A3B8;
+    --bg: #F1F5F9;
+    --bg-card: #FFFFFF;
+    --border: rgba(15, 23, 42, 0.08);
+    --border-light: rgba(15, 23, 42, 0.04);
+    --gold: #D97706;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  .page { max-width: 760px; margin: 3rem auto; background: var(--bg-card); box-shadow: 0 10px 40px rgba(0,0,0,.04), 0 1px 3px rgba(0,0,0,.02); min-height: 100vh; border-radius: 8px; overflow: hidden; }
+
+  /* MASTHEAD */
+  .masthead { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 2.5rem 3rem; display: flex; justify-content: space-between; align-items: center; gap: 2rem; }
+  .engine-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: .15em; text-transform: uppercase; color: var(--teal-mid); margin-bottom: 10px; }
+  .ticker-name { font-family: 'Merriweather', serif; font-size: 32px; font-weight: 900; line-height: 1.1; color: var(--teal-dark); letter-spacing: -0.02em; }
+  .company-name { font-size: 13px; color: var(--text-muted); margin-top: 6px; font-weight: 400; }
+  .biz-snap { background: var(--teal-light); border: 1px solid var(--border); border-left: 3px solid var(--teal); border-radius: 0 6px 6px 0; padding: 1rem 1.25rem; min-width: 220px; }
+  .biz-snap-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: .15em; text-transform: uppercase; color: var(--teal); margin-bottom: 12px; }
+  .biz-row { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; border-bottom: 1px solid var(--border-light); }
+  .biz-row:last-child { border-bottom: none; }
+  .biz-key { font-size: 11px; color: var(--text-muted); }
+  .biz-val { font-size: 11px; color: var(--text); font-weight: 500; }
+
+  /* COCKPIT */
+  .section { padding: 2rem 3rem; border-bottom: 1px solid var(--border-light); }
+  .section-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: .15em; text-transform: uppercase; color: var(--teal); margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .tldr-block { font-size: 15px; line-height: 1.7; padding: 18px 24px; background: var(--teal-light); border-left: 3px solid var(--teal); border-radius: 0 6px 6px 0; }
+  .tldr-block strong { color: var(--teal-dark); font-weight: 600; }
+
+  /* THE NUMBERS */
+  .numbers-section { padding: 2rem 3rem; border-bottom: 1px solid var(--border-light); }
+  .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-top: 3px solid var(--teal); border-radius: 0 0 6px 6px; padding: 1.25rem 1.25rem; }
+  .stat-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  .stat-value { font-size: 22px; font-weight: 700; color: var(--teal-dark); line-height: 1.1; font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+  .stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 6px; line-height: 1.4; }
+  .stat-value.up { color: var(--bull); }
+  .stat-value.down { color: var(--bear); }
+  .stat-value.warn { color: var(--amber); }
+
+  /* C19 NEWS PATTERN */
+  .c19-wrap { border-bottom: 1px solid var(--border-light); }
+  .c19-head { padding: 1.5rem 3rem 0.5rem; }
+  .c19-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: .15em; text-transform: uppercase; color: var(--teal); }
+  .timeline { overflow-x: auto; padding: 1.5rem 3rem; background: white; }
+  .timeline-inner { display: flex; gap: 12px; min-width: max-content; align-items: stretch; }
+  .ev { border-radius: 6px; padding: 14px 16px; min-width: 170px; max-width: 190px; border: 1px solid; }
+  .ev.pos { background: var(--bull-light); border-color: #A7F3D0; }
+  .ev.neg { background: var(--bear-light); border-color: #FECDD3; }
+  .ev.flat { background: var(--teal-light); border-color: var(--border); }
+  .ev-date { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+  .ev.pos .ev-date { color: var(--bull-mid); }
+  .ev.neg .ev-date { color: var(--bear-mid); }
+  .ev.flat .ev-date { color: var(--text-muted); }
+  .ev-name { font-size: 12px; font-weight: 500; margin-bottom: 6px; line-height: 1.4; color: var(--text); }
+  .ev-type { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
+  .ev-rx { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .ev.pos .ev-rx { color: var(--bull); }
+  .ev.neg .ev-rx { color: var(--bear); }
+  .ev.flat .ev-rx { color: var(--text-muted); }
+  .ev-read { font-size: 11px; color: var(--text-muted); margin-top: 6px; line-height: 1.5; }
+  .c19-framing { padding: 1.25rem 3rem; background: var(--teal-light); border-top: 1px solid var(--border-light); }
+  .c19-framing-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 500; letter-spacing: .15em; text-transform: uppercase; color: var(--teal); margin-right: 12px; }
+  .c19-framing-text { font-size: 12px; color: var(--text-muted); font-style: italic; }
+
+  /* ARENA */
+  .arena-wrap { background: var(--teal-light); border-top: 3px solid var(--teal-dark); }
+  .arena-head { background: var(--teal-dark); color: white; padding: 2rem 3rem; }
+  .arena-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: .15em; text-transform: uppercase; color: rgba(255,255,255,.5); margin-bottom: 8px; }
+  .arena-title { font-family: 'Merriweather', serif; font-size: 24px; font-weight: 900; color: white; letter-spacing: -0.01em; }
+  .arena-sub { font-size: 14px; color: rgba(255,255,255,.7); font-weight: 400; margin-top: 6px; }
+  .arena-sub strong { color: white; font-weight: 500; }
+  .arena-disc { font-size: 11px; color: rgba(255,255,255,.4); margin-top: 10px; }
+  .arena-tabs { display: flex; background: white; border-bottom: 1px solid var(--border); padding: 0 3rem; flex-wrap: wrap; }
+  .a-tab { padding: 14px 0; margin-right: 24px; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; transition: all .2s; }
+  .a-tab:hover { color: var(--teal); }
+  .a-tab.active { color: var(--teal-dark); border-bottom-color: var(--teal-dark); }
+  .a-panel { display: none; }
+  .a-panel.active { display: block; }
+
+  /* NARRATIVES */
+  .narr-grid { display: grid; grid-template-columns: 1fr 1fr; background: white; }
+  .narr-side { padding: 2rem 2.5rem; }
+  .narr-side.bull-side { border-right: 1px solid var(--border-light); }
+  .narr-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid; }
+  .bull-side .narr-header { border-color: var(--bull); }
+  .bear-side .narr-header { border-color: var(--bear); }
+  .narr-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; flex-shrink: 0; }
+  .bull-side .narr-icon { background: var(--bull-light); color: var(--bull); }
+  .bear-side .narr-icon { background: var(--bear-light); color: var(--bear); }
+  .narr-title { font-family: 'Merriweather', serif; font-size: 16px; font-weight: 700; }
+  .bull-side .narr-title { color: var(--bull); }
+  .bear-side .narr-title { color: var(--bear); }
+  .thesis { font-size: 13px; font-style: italic; line-height: 1.6; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; border-left: 3px solid; }
+  .bull-side .thesis { background: var(--bull-light); color: #065F46; border-color: var(--bull-mid); }
+  .bear-side .thesis { background: var(--bear-light); color: #9F1239; border-color: var(--bear-mid); }
+  .arg-list { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+  .arg-item { display: flex; gap: 12px; align-items: flex-start; }
+  .arg-n { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600; flex-shrink: 0; margin-top: 2px; }
+  .bull-side .arg-n { background: var(--bull-light); color: var(--bull); }
+  .bear-side .arg-n { background: var(--bear-light); color: var(--bear); }
+  .arg-headline { font-size: 13px; font-weight: 600; line-height: 1.4; margin-bottom: 4px; color: var(--text); }
+  .arg-mech { font-size: 12px; color: var(--text-muted); line-height: 1.55; }
+  .narr-verdict { padding: 1.5rem 3rem; background: white; border-top: 1px solid var(--border-light); }
+  .narr-verdict p { font-size: 13px; color: var(--text-muted); font-style: italic; border-left: 2px solid var(--gold); padding-left: 14px; line-height: 1.7; }
+
+  /* CATALYST CLOCK */
+  .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 2rem 3rem; background: white; }
+  .cat-card { border-radius: 8px; padding: 16px; border: 1px solid; }
+  .cat-card.bull-card { background: var(--bull-light); border-color: #A7F3D0; }
+  .cat-card.bear-card { background: var(--bear-light); border-color: #FECDD3; }
+  .cat-when { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px; }
+  .bull-card .cat-when { color: var(--bull-mid); }
+  .bear-card .cat-when { color: var(--bear-mid); }
+  .cat-event { font-size: 13px; font-weight: 600; line-height: 1.4; margin-bottom: 6px; color: var(--text); }
+  .cat-read { font-size: 12px; color: var(--text-muted); line-height: 1.55; }
+
+  /* SCENARIOS */
+  .scen-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); margin: 2rem 3rem; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+  .scen-cell { padding: 1.5rem; background: white; }
+  .scen-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 8px; }
+  .scen-cell.bull-cell .scen-label { color: var(--bull); }
+  .scen-cell.bear-cell .scen-label { color: var(--bear); }
+  .scen-headline { font-size: 13px; font-weight: 600; line-height: 1.4; margin-bottom: 8px; color: var(--text); }
+  .scen-body { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+
+  /* TRADE ANATOMY */
+  .anatomy-wrap { padding: 2rem 3rem; background: white; }
+  .anat-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border-light); gap: 24px; }
+  .anat-label { font-size: 12px; color: var(--text-muted); min-width: 180px; flex-shrink: 0; font-weight: 500; }
+  .anat-val { font-size: 13px; color: var(--text); text-align: right; line-height: 1.5; }
+  .anat-val.up { color: var(--bull); font-weight: 500; }
+  .anat-val.down { color: var(--bear); font-weight: 500; }
+  .run-btn { display: block; width: 100%; margin-top: 1.5rem; padding: 14px 20px; background: var(--teal-dark); color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+  .run-btn:hover { background: var(--teal-mid); }
+
+  /* THE COMPETITION MATRIX */
+  .body-section { padding: 2rem 3rem; border-bottom: 1px solid var(--border-light); }
+  .comp-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .comp-table th { background: var(--teal-light); color: var(--text-muted); font-weight: 600; text-align: left; padding: 10px 12px; font-size: 10px; letter-spacing: .05em; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+  .comp-table td { padding: 12px; border-bottom: 1px solid var(--border-light); color: var(--text); vertical-align: top; }
+  .comp-table tr.subject td { background: #EDF2F7; font-weight: 600; color: var(--teal-dark); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .comp-table tr:not(.subject):nth-child(even) td { background: var(--teal-light); }
+  .comp-table tr:not(.subject):nth-child(odd) td { background: #FFFFFF; }
+  .comp-sym { font-family: 'JetBrains Mono', monospace; font-weight: 500; color: var(--teal-dark); }
+  .threat-high { color: var(--bear); font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+  .threat-med { color: var(--amber); font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+  .threat-low { color: var(--text-light); font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+  .comp-read { font-size: 12px; color: var(--text-muted); font-style: italic; margin-top: 16px; line-height: 1.6; padding: 12px 16px; background: var(--teal-light); border-radius: 6px; }
+
+  /* SIGNAL */
+  .signal-box { background: var(--amber-light); border: 1px solid rgba(180, 83, 9, 0.2); border-left: 4px solid var(--amber); border-radius: 0 6px 6px 0; padding: 20px 24px; }
+  .signal-head { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: var(--amber); margin-bottom: 10px; letter-spacing: 0.05em; }
+  .signal-box p { font-size: 14px; color: var(--text); line-height: 1.7; }
+
+  /* CITATIONS */
+  .cites { font-size: 11px; color: var(--text-muted); line-height: 1.6; }
+  .cites div { padding: 4px 0; border-bottom: 1px dashed var(--border-light); }
+  .cites div:last-child { border-bottom: none; }
+
+  /* FOOTER */
+  .footer { background: var(--teal-dark); color: rgba(255,255,255,.5); padding: 1.5rem 3rem; font-size: 11px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  .footer strong { color: white; }
+
+  @media(max-width:600px){
+    .masthead, .section, .numbers-section, .c19-head, .timeline, .c19-framing, .arena-head, .arena-tabs, .narr-side, .narr-verdict, .cat-grid, .anatomy-wrap, .body-section, .footer { padding-left: 1.5rem; padding-right: 1.5rem; }
+    .masthead { flex-direction: column; align-items: flex-start; }
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+    .narr-grid, .cat-grid, .scen-grid { grid-template-columns: 1fr; }
+    .narr-side.bull-side { border-right: none; border-bottom: 1px solid var(--border-light); }
+    .scen-grid { margin: 1.5rem; }
+    .anat-row { flex-direction: column; gap: 4px; }
+    .anat-val { text-align: left; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- MASTHEAD -->
+  <div class="masthead">
+    <div style="flex:1;">
+      <div class="engine-label">Equity Research Engine v4.10 · Quick Trade</div>
+      <div class="ticker-name">DFTX — Definium Therapeutics</div>
+      <div class="company-name">Definium Therapeutics, Inc. (formerly MindMed) · Psychedelic CNS therapeutics · Nasdaq: DFTX</div>
+    </div>
+    <div class="biz-snap">
+      <div class="biz-snap-label">Company snapshot</div>
+      <div class="biz-row"><span class="biz-key">Category</span><span class="biz-val">Psychiatric / CNS drug dev</span></div>
+      <div class="biz-row"><span class="biz-key">Growth stage</span><span class="biz-val">Clinical-stage · pre-revenue · Phase 3</span></div>
+    </div>
+  </div>
+
+  <!-- COCKPIT -->
+  <div class="section">
+    <div class="section-label">Cockpit</div>
+    <div class="tldr-block">
+      <strong>DFTX — WATCH.</strong> This is a binary biotech wearing a $2.5B price tag, and the entire thesis fits on a calendar. Definium (the company formerly known as MindMed) is taking LSD — yes, that LSD, rebranded as DT120 ODT — into four Phase 3 trials for anxiety and depression, with FDA Breakthrough Therapy status and three pivotal readouts landing across the next six months [1][4]. Cash runs into 2028, so survival isn't the question — the data is [3]. The stock already ran from $6 to the low $20s on the promise [5]; now it has to deliver the proof. The deciding question: does a psychedelic actually beat placebo in a registrational trial, or does the believe-mode rally meet its first real verdict this summer?
+    </div>
+  </div>
+
+  <!-- THE NUMBERS -->
+  <div class="numbers-section">
+    <div class="section-label">The numbers</div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-label">Price</div><div class="stat-value">$22.70</div><div class="stat-sub">Early June 2026 [6]</div></div>
+      <div class="stat-card"><div class="stat-label">Mkt Cap</div><div class="stat-value">$2.49B</div></div>
+      <div class="stat-card"><div class="stat-label">52wk Range</div><div class="stat-value" style="font-size:16px;">$6.35–$26.25</div></div>
+      <div class="stat-card"><div class="stat-label">Rev YoY Growth</div><div class="stat-value">N/A</div><div class="stat-sub">Pre-revenue · $0 product sales (Q1'26 vs Q1'25) [2]</div></div>
+      <div class="stat-card"><div class="stat-label">Rev QoQ Growth</div><div class="stat-value">N/A</div><div class="stat-sub">Pre-revenue · $0 (Q1'26 vs Q4'25) [2]</div></div>
+      <div class="stat-card"><div class="stat-label">Cash / Runway</div><div class="stat-value up">$373M</div><div class="stat-sub">Funded into 2028 · ~8+ quarters [3]</div></div>
+    </div>
+  </div>
+
+  <!-- C19 NEWS PATTERN -->
+  <div class="c19-wrap">
+    <div class="c19-head">
+      <div class="c19-eyebrow">C19 · The News Pattern · PIVOT · Confidence: HIGH</div>
+    </div>
+    <div class="timeline">
+      <div class="timeline-inner">
+        <div class="ev pos"><div class="ev-date">May 2024</div><div class="ev-name">Phase 2b GAD positive data (APA presentation)</div><div class="ev-type">PRODUCT</div><div class="ev-rx">+73%</div><div class="ev-read">The repricing event. MM120/LSD beats placebo — stock identity changes overnight.</div></div>
+        <div class="ev pos"><div class="ev-date">2024</div><div class="ev-name">FDA Breakthrough Therapy Designation, GAD</div><div class="ev-type">COMPLIANCE</div><div class="ev-rx">Positive</div><div class="ev-read">Regulatory validation. A psychedelic gets a fast lane. Credibility locks in.</div></div>
+        <div class="ev pos"><div class="ev-date">FY2025</div><div class="ev-name">Stock +92% over the year ($6.96 → $13.39)</div><div class="ev-type">GUIDANCE</div><div class="ev-rx">+92%</div><div class="ev-read">Sustained re-rating as Phase 3 program builds. Believe mode, not show-me.</div></div>
+        <div class="ev pos"><div class="ev-date">Q4 2025</div><div class="ev-name">~$259M equity raise; runway into 2028</div><div class="ev-type">CAPITAL</div><div class="ev-rx">Absorbed</div><div class="ev-read">Dilution shrugged off. Market funds the readouts without punishing the raise.</div></div>
+        <div class="ev pos"><div class="ev-date">Jan 15 2026</div><div class="ev-name">Rebrand to Definium; new ticker DFTX</div><div class="ev-type">PIVOT</div><div class="ev-rx">Positive</div><div class="ev-read">New identity stamped. MindMed the meme is gone; Definium the pipeline arrives.</div></div>
+        <div class="ev pos"><div class="ev-date">Feb 2026</div><div class="ev-name">Full enrollment, Emerge Phase 3 MDD</div><div class="ev-type">PRODUCT</div><div class="ev-rx">Positive</div><div class="ev-read">Execution proof. Faster-than-expected enrollment pulls readout forward.</div></div>
+        <div class="ev neg"><div class="ev-date">May 2026</div><div class="ev-name">Q1'26 EPS miss: -$0.71 vs -$0.50 est</div><div class="ev-type">EARNINGS</div><div class="ev-rx">Muted / held</div><div class="ev-read">Wider loss ignored. For a clinical biotech, burn is noise — data is the only signal.</div></div>
+      </div>
+    </div>
+    <div class="c19-framing">
+      <span class="c19-framing-label">Arena framing</span>
+      <span class="c19-framing-text">PIVOT pattern: the old MindMed thesis is dead. Both Arena narratives must be written from the new identity — a Phase 3, Breakthrough-designated CNS company priced on registrational data, not a speculative psychedelic meme. State the Before (penny-stock hope) and After (de-risked pivotal play) explicitly. The bull argues the 2026 readouts confirm the re-rating; the bear argues the believe-mode rally has priced perfection into binary trials that have never read out.</span>
+    </div>
+  </div>
+
+  <!-- C18 THE ARENA -->
+  <div class="arena-wrap">
+    <div class="arena-head">
+      <div class="arena-eyebrow">C18 · Equity Research Engine v4.10 · Quick Trade</div>
+      <div class="arena-title">The Arena</div>
+      <div class="arena-sub"><strong>Bull vs. Bear · Forward conviction narrative · Derived from verified report findings</strong></div>
+      <div class="arena-disc">No new citations · Not a buy/sell recommendation</div>
+    </div>
+    <div class="arena-tabs">
+      <button class="a-tab active" onclick="aTab('narr',this)">Narratives</button>
+      <button class="a-tab" onclick="aTab('cats',this)">Catalyst clock</button>
+      <button class="a-tab" onclick="aTab('scen',this)">Scenarios</button>
+      <button class="a-tab" onclick="aTab('anat',this)">Trade anatomy</button>
+    </div>
+
+    <div id="ap-narr" class="a-panel active">
+      <div class="narr-grid">
+        <div class="narr-side bull-side">
+          <div class="narr-header"><div class="narr-icon">↑</div><div class="narr-title">The Bull's Story</div></div>
+          <div class="thesis">"Before: a broke psychedelic meme stock. After: the most de-risked psychedelic in the clinic — Breakthrough status, four Phase 3 shots on goal, and the cash to take them all. The 2024 Phase 2b already proved the molecule works. 2026 just makes it official."</div>
+          <ul class="arg-list">
+            <li class="arg-item"><div class="arg-n">1</div><div><div class="arg-headline">Three pivotal readouts in six months is a shots-on-goal machine</div><div class="arg-mech">Voyage (GAD), Emerge (MDD), and Panorama (GAD) all read out across 2026. One clean Phase 3 win re-rates the stock. Multiple correlated trials of the same molecule mean a positive Voyage de-risks Panorama instantly — the probabilities compound, not stack independently.</div></div></li>
+            <li class="arg-item"><div class="arg-n">2</div><div><div class="arg-headline">Phase 2b already cleared the efficacy bar</div><div class="arg-mech">MM120 hit statistically significant GAD endpoints at week 4 and held to week 12, published in JAMA. Phase 3 is a replication exercise on a molecule with proven signal, not a coin flip on biology. The hardest scientific question is already answered.</div></div></li>
+            <li class="arg-item"><div class="arg-n">3</div><div><div class="arg-headline">Breakthrough Therapy status compresses the path to market</div><div class="arg-mech">FDA Breakthrough designation means rolling review, closer agency engagement, and a faster NDA. First-mover approval in psychedelic anxiety opens a multi-billion-dollar GAD market with no branded competition and pricing power on a novel mechanism.</div></div></li>
+            <li class="arg-item"><div class="arg-n">4</div><div><div class="arg-headline">$373M and funded into 2028 removes the financing gun</div><div class="arg-mech">Most clinical biotechs trade at a discount for dilution risk into every catalyst. Definium pre-funded through all three readouts. It can deliver pivotal data without a desperate raise — the upside accrues to existing holders, not a rescue financier.</div></div></li>
+            <li class="arg-item"><div class="arg-n">5</div><div><div class="arg-headline">Wall Street is already leaning in: Strong Buy, $38.50 target</div><div class="arg-mech">Eight analysts rate it Strong Buy with a mean target ~70% above spot. Sell-side conviction ahead of binary data is rare and signals the institutional base believes the readouts land. A positive print converts targets into a chase.</div></div></li>
+          </ul>
+        </div>
+        <div class="narr-side bear-side">
+          <div class="narr-header"><div class="narr-icon">↓</div><div class="narr-title">The Bear's Story</div></div>
+          <div class="thesis">"A $2.5B valuation on zero revenue and three trials that have never read out. Phase 2 success is the graveyard of biotech — the CNS field is littered with molecules that beat placebo in Phase 2b and missed in Phase 3. You're not buying a drug. You're buying a bet that LSD passes a coin-flip you can't handicap."</div>
+          <ul class="arg-list">
+            <li class="arg-item"><div class="arg-n">1</div><div><div class="arg-headline">Three correlated readouts cut both ways — fast</div><div class="arg-mech">The bull calls it shots on goal. The bear calls it shared single-point-of-failure. If Voyage misses, it doesn't just kill one trial — it indicts the molecule, and Panorama and Emerge get repriced as likely failures the same session. Correlation is a feature on the way up and a guillotine on the way down.</div></div></li>
+            <li class="arg-item"><div class="arg-n">2</div><div><div class="arg-headline">Functional unblinding is the psychedelic field's unsolved problem</div><div class="arg-mech">Patients know if they took LSD. That blows up placebo control and inflates Phase 2 effect sizes. The FDA already rejected MDMA on exactly these grounds in 2024. A strong Phase 2b can shrink dramatically in a larger, more rigorously controlled Phase 3 — and the agency is watching this class skeptically.</div></div></li>
+            <li class="arg-item"><div class="arg-n">3</div><div><div class="arg-headline">$2.5B prices in approval, not just positive data</div><div class="arg-mech">At pre-revenue with zero product sales, the market cap already embeds clean trials AND a smooth path to a launched drug. There is little margin of safety. Even a "mixed" readout — a hit on one endpoint, a miss on another — could trigger a 40–60% drawdown because perfection is the baseline.</div></div></li>
+            <li class="arg-item"><div class="arg-n">4</div><div><div class="arg-headline">REMS and clinic-administered dosing cap the commercial story</div><div class="arg-mech">A dosed-in-clinic hallucinogen needs supervised administration, monitoring, and likely a REMS program. That throttles patient throughput and reimbursement versus a pill GAD patients take at home. Even on approval, the revenue ramp is slower and narrower than the TAM headline implies.</div></div></li>
+            <li class="arg-item"><div class="arg-n">5</div><div><div class="arg-headline">The whole cohort is one bad print from a sentiment reset</div><div class="arg-mech">Compass, Cybin, GH Research and Definium trade as a basket on psychedelic-class belief. A single high-profile Phase 3 miss anywhere in the group — not just Definium — drains the multiple from all of them. The bull needs its own data AND the field to stay believed.</div></div></li>
+          </ul>
+        </div>
+      </div>
+      <div class="narr-verdict">
+        <p>Definium is a calendar trade dressed as a science story. The bull sees a proven molecule with Breakthrough status, full funding, and three chances to make it official in 2026. The bear sees a $2.5B option premium on placebo-control problems that have already sunk one psychedelic at the FDA. Both are right until the data prints — and the first print is weeks, not years, away. This is a position you size for a binary, not a buy-and-forget.</p>
+      </div>
+    </div>
+
+    <div id="ap-cats" class="a-panel">
+      <div class="cat-grid">
+        <div class="cat-card bull-card"><div class="cat-when">Late Q2 2026</div><div class="cat-event">Emerge — Phase 3 MDD topline</div><div class="cat-read">Bull trigger: a depression hit broadens DT120 beyond anxiety and proves the molecule generalizes across indications. Re-rates the whole pipeline.</div></div>
+        <div class="cat-card bear-card"><div class="cat-when">Late Q2 2026</div><div class="cat-event">Emerge — risk of MDD miss</div><div class="cat-read">Bear confirmation: MDD has a notoriously high placebo response. A miss here is the cheapest way for the thesis to crack first.</div></div>
+        <div class="cat-card bull-card"><div class="cat-when">Early Q3 2026</div><div class="cat-event">Voyage — Phase 3 GAD topline (Part A)</div><div class="cat-read">Bull trigger: the flagship indication. A win replicates Phase 2b at registrational scale and puts an NDA in sight under Breakthrough.</div></div>
+        <div class="cat-card bear-card"><div class="cat-when">Early Q3 2026</div><div class="cat-event">Voyage — the binary that defines the stock</div><div class="cat-read">Bear confirmation: a Voyage miss indicts the lead indication and drags Panorama down with it the same day. Highest-impact downside event.</div></div>
+        <div class="cat-card bull-card"><div class="cat-when">2H 2026</div><div class="cat-event">Panorama — second Phase 3 GAD readout</div><div class="cat-read">Bull trigger: a second confirmatory GAD win is the package the FDA wants. Two positive pivotals make approval the base case.</div></div>
+        <div class="cat-card bear-card"><div class="cat-when">Ongoing</div><div class="cat-event">Cohort contagion / FDA class stance</div><div class="cat-read">Bear confirmation: any psychedelic-class Phase 3 failure or fresh FDA skepticism (post-MDMA) reprices the basket regardless of Definium's own data.</div></div>
+      </div>
+    </div>
+
+    <div id="ap-scen" class="a-panel">
+      <div class="scen-grid">
+        <div class="scen-cell bull-cell"><div class="scen-label">▲ Bull base · 18 months</div><div class="scen-headline">At least one Phase 3 GAD trial hits cleanly; MDD supportive.</div><div class="scen-body">Voyage replicates Phase 2b efficacy and Definium moves toward an NDA under Breakthrough. The de-risking re-rates the stock 50–90% from current levels as approval probability jumps and a partnership/M&A premium appears.</div></div>
+        <div class="scen-cell bear-cell"><div class="scen-label">▼ Bear base · 18 months</div><div class="scen-headline">A pivotal misses or reads "mixed" on placebo-control grounds.</div><div class="scen-body">Effect size shrinks versus Phase 2b and the lead trial disappoints. With approval no longer the base case, the stock falls 50–70% toward cash-plus-pipeline value and the cohort sells off alongside it.</div></div>
+        <div class="scen-cell bull-cell"><div class="scen-label">▲ Bull extreme · 3 years</div><div class="scen-headline">DT120 becomes the first approved psychedelic for GAD, with MDD following.</div><div class="scen-body">First-to-market in a multi-billion-dollar anxiety indication with no branded rival. Commercial launch plus label expansion supports a multiple re-rate of 2–4x from today as Definium becomes a CNS franchise or a large-cap acquisition target.</div></div>
+        <div class="scen-cell bear-cell"><div class="scen-label">▼ Bear extreme · 3 years</div><div class="scen-headline">Pivotals fail or FDA rejects on blinding/REMS concerns.</div><div class="scen-body">The molecule can't separate from placebo at registrational rigor, or the agency declines the class. Equity collapses 80%+ toward net cash, the pipeline is written down, and the psychedelic-therapeutics thesis stalls industry-wide.</div></div>
+      </div>
+    </div>
+
+    <div id="ap-anat" class="a-panel">
+      <div class="anatomy-wrap">
+        <div class="anat-row"><span class="anat-label">Trade type</span><span class="anat-val">Binary clinical-event speculation · pre-revenue · pre-approval CNS biotech</span></div>
+        <div class="anat-row"><span class="anat-label">The bet</span><span class="anat-val">DT120 ODT (LSD) replicates its Phase 2b signal in at least one Phase 3 trial in 2026</span></div>
+        <div class="anat-row"><span class="anat-label">What makes the bull right</span><span class="anat-val up">Voyage or Emerge hits primary endpoint + effect size holds vs placebo + Breakthrough path stays clean</span></div>
+        <div class="anat-row"><span class="anat-label">What makes the bear right</span><span class="anat-val down">Pivotal miss or "mixed" readout + functional-unblinding scrutiny + FDA class skepticism</span></div>
+        <div class="anat-row"><span class="anat-label">The deciding variable</span><span class="anat-val">Voyage Phase 3 GAD topline (early Q3 2026) — placebo-adjusted efficacy and significance</span></div>
+        <div class="anat-row"><span class="anat-label">Risk / reward shape</span><span class="anat-val">Asymmetric, both ways · binary · ~50–90% up on a hit, ~50–70% down on a miss</span></div>
+        <div class="anat-row"><span class="anat-label">Position sizing logic</span><span class="anat-val">Trading / event size only · never core weight into a binary · consider defined-risk structures</span></div>
+        <div class="anat-row"><span class="anat-label">Thesis invalidation</span><span class="anat-val down">First Phase 3 readout misses primary endpoint OR FDA flags blinding/control as approvability risk</span></div>
+        <div class="anat-row" style="border-bottom:none;"><span class="anat-label">Time horizon</span><span class="anat-val">Weeks to ~6 months · the first pivotal readout resolves most of the thesis</span></div>
+        <button class="run-btn" onclick="if(window.sendPrompt){sendPrompt('Run the full Equity Research Engine v4.10 analysis on DFTX — Definium Therapeutics, Inc.')}">Run the full Deep Dive on DFTX — Definium Therapeutics →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- THE COMPETITION -->
+  <div class="body-section">
+    <div class="section-label">The competition</div>
+    <table class="comp-table">
+      <thead><tr><th>#</th><th>Competitor</th><th>Symbol</th><th>Similarity</th><th>Lead/Lag</th><th>Key gap</th><th>Threat</th><th>Window</th></tr></thead>
+      <tbody>
+        <tr class="subject"><td>—</td><td>Definium Therapeutics</td><td class="comp-sym">DFTX</td><td>Baseline</td><td>0</td><td>4 Phase 3 trials, Breakthrough GAD, $373M cash — deepest pivotal pipeline in the class</td><td>—</td><td>—</td></tr>
+        <tr><td>1</td><td>Cybin</td><td class="comp-sym">CYBN</td><td>5</td><td>–1</td><td>CYB003 psilocybin in Phase 3 for MDD; smaller balance sheet, single lead program</td><td class="threat-med">MEDIUM</td><td>2026–27</td></tr>
+        <tr><td>2</td><td>Compass Pathways</td><td class="comp-sym">CMPS</td><td>5</td><td>–1</td><td>COMP360 psilocybin Phase 3 TRD; first mover but mixed pivotal signal, durability questions</td><td class="threat-med">MEDIUM</td><td>2026</td></tr>
+        <tr><td>3</td><td>GH Research</td><td class="comp-sym">GHRS</td><td>4</td><td>–1</td><td>GH001 mebufotenin; strong Phase 2b (JAMA Psych, Mar '26) but only now seeking Phase 3</td><td class="threat-med">MEDIUM</td><td>2027+</td></tr>
+        <tr><td>4</td><td>atai Life Sciences</td><td class="comp-sym">ATAI</td><td>4</td><td>–2</td><td>Platform of earlier-stage psychedelic assets (incl. Beckley BPL-003); behind on pivotal data</td><td class="threat-low">LOW</td><td>2027+</td></tr>
+        <tr><td>5</td><td>Sage Therapeutics</td><td class="comp-sym">SAGE</td><td>3</td><td>+1</td><td>Commercial CNS (Zurzuvae) — approved/revenue, but neurosteroid, not psychedelic; adjacent</td><td class="threat-med">MEDIUM</td><td>Now</td></tr>
+      </tbody>
+    </table>
+    <div class="comp-read">Among psychedelic pure-plays, Definium is the leader on pivotal depth: four Phase 3 trials, Breakthrough status, and the strongest cash position. Cybin, Compass and GH Research are credible but each runs a single lead asset or trails on registrational data. The only rival that is commercially ahead — Sage — competes in CNS with a non-psychedelic mechanism. For a theme trade, DFTX is the small/mid-cap pure-play; there is no large-cap psychedelic proxy, so the class trades on its own readouts.</div>
+  </div>
+
+  <!-- SIGNAL & VERDICT -->
+  <div class="body-section">
+    <div class="section-label">Signal &amp; verdict</div>
+    <div class="signal-box">
+      <div class="signal-head">⚠ WATCH</div>
+      <p>DFTX earns a WATCH. The setup is the most de-risked in the psychedelic class — proven Phase 2b efficacy, FDA Breakthrough status, four Phase 3 shots on goal, and a balance sheet funded through every readout, so there is no financing gun and no near-term solvency flag. But the entire $2.5B valuation rests on binary clinical data that has never read out, in a field where functional unblinding has already sunk one drug at the FDA. The catalysts are asymmetric in both directions and arrive fast. The single most important thing to watch: the Voyage Phase 3 GAD topline in early Q3 2026 — placebo-adjusted efficacy on that print resolves most of the thesis. Size this for a binary event, not a buy-and-hold.</p>
+    </div>
+  </div>
+
+  <!-- CITATIONS -->
+  <div class="body-section">
+    <div class="section-label">Citations</div>
+    <div class="cites">
+      <div>[1] Definium Therapeutics 8-K / pipeline update — DT120 ODT Phase 3 path (Voyage, Emerge, Panorama), 2026 readouts · sec.gov / stocktitan.net</div>
+      <div>[2] Definium Therapeutics Q1 2026 results — $0 revenue, GAAP net loss -$0.71/sh vs -$0.50 consensus · chartmill.com / company IR</div>
+      <div>[3] Definium Q1 2026 cash, equivalents & investments $373.4M; ~$259M Q4'25 raise; runway into 2028 · seekingalpha.com / company IR</div>
+      <div>[4] Definium — three pivotal Phase III readouts targeted in 2026; Emerge full enrollment Feb 2026 · seekingalpha.com</div>
+      <div>[5] Name change MindMed → Definium, ticker DFTX effective Jan 15, 2026; FY2025 stock +92%; 2024 Phase 2b GAD +73% reaction · marketscreener.com / investing.com</div>
+      <div>[6] Market data: price ~$22.70, market cap $2.49B, 52wk $6.35–$26.25, Strong Buy (8 analysts), mean target $38.50 · morningstar.com / marketbeat.com / stockanalysis.com, early June 2026</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <span><strong>Equity Research Engine v4.10</strong> · Quick Trade · C19 · C18 · DFTX · June 4, 2026</span>
+    <span>AutoMagic Labs · Not a buy/sell recommendation</span>
+  </div>
+
+</div>
+<script>
+function aTab(id,btn){
+  document.querySelectorAll('.a-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.a-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('ap-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
